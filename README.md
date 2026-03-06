@@ -1,3 +1,4 @@
+
 # Scientific Terms Project
 
 ## Prerequisite
@@ -29,3 +30,6 @@
 
 ## Troubleshooting
 - If you see "Error connecting to server", make sure the terminal running `uvicorn` is still open and active.
+
+# Scientific_Terminology
+ 0452d09082b5adc273e7efddb1ff4bdfd428b2e3

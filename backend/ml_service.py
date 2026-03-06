@@ -374,52 +374,78 @@ def generate_quiz(term: str, language: str = "en", explanation: str = "") -> str
         "top_p": 0.95
     }
 
-    try:
-        response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=45)
-        
-        if response.status_code == 200:
-            result = response.json()
-            if 'choices' in result and len(result['choices']) > 0:
-                content = result['choices'][0]['message']['content']
-                
-                # Cleanup content
-                content = content.replace("```json", "").replace("```", "").strip()
-                
-                # Try to extract JSON array using regex if there's extra text
-                json_match = re.search(r'\[.*\]', content, re.DOTALL)
-                if json_match:
-                    content = json_match.group(0)
-                
-                # Validate JSON
-                try:
-                    json.loads(content)
-                    return content
-                except json.JSONDecodeError:
-                    logger.error(f"Invalid JSON generated: {content}")
-                    # Fallback or retry logic could go here
-            else:
-                logger.error(f"Unexpected API response format: {result}")
-    except Exception as e:
-        logger.error(f"Error generating quiz: {e}")
+    for attempt in range(2):
+        try:
+            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=45)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if 'choices' in result and len(result['choices']) > 0:
+                    content = result['choices'][0]['message']['content']
+                    
+                    # Cleanup content
+                    content = content.replace("```json", "").replace("```", "").strip()
+                    
+                    # Try to extract JSON array using regex if there's extra text
+                    json_match = re.search(r'\[.*\]', content, re.DOTALL)
+                    if json_match:
+                        content = json_match.group(0)
+                    
+                    # Validate JSON
+                    try:
+                        json.loads(content)
+                        return content
+                    except json.JSONDecodeError:
+                        logger.error(f"Invalid JSON generated: {content}")
+                else:
+                    logger.error(f"Unexpected API response format: {result}")
+            
+            elif response.status_code == 503:
+                # Still loading
+                if attempt == 0:
+                    continue
+                return "LOADING"
+
+        except requests.exceptions.Timeout:
+            if attempt == 0: continue
     
-    # Fallback Quiz (if API fails)
-    fallback_quiz = [
-        {
-            "question": f"What is the main concept of {term}?",
-            "options": ["It is a key scientific principle.", "It is a type of food.", "It is a planet.", "It is a historical event."],
-            "correct_index": 0
-        },
-        {
-            "question": f"Which field of science studies {term}?",
-            "options": ["Physics/Chemistry/Biology", "Literature", "History", "Arts"],
-            "correct_index": 0
-        },
-         {
-            "question": f"Is {term} important?",
-            "options": ["Yes, very important.", "No, not at all.", "Maybe.", "I don't know."],
-            "correct_index": 0
-        }
-    ]
+    # Fallback Quiz (if API fails or is loading)
+    if language == "hi":
+        fallback_quiz = [
+            {
+                "question": f"{term} का मुख्य अवधारणा क्या है?",
+                "options": ["यह एक महत्वपूर्ण वैज्ञानिक सिद्धांत है।", "यह एक प्रकार का भोजन है।", "यह एक ग्रह है।", "यह एक ऐतिहासिक घटना है।"],
+                "correct_index": 0
+            },
+            {
+                "question": f"विज्ञान का कौन सा क्षेत्र {term} का अध्ययन करता है?",
+                "options": ["भौतिकी/रसायन विज्ञान/जीव विज्ञान", "साहित्य", "इतिहास", "कला"],
+                "correct_index": 0
+            },
+             {
+                "question": f"क्या {term} महत्वपूर्ण है?",
+                "options": ["हाँ, बहुत महत्वपूर्ण है।", "नहीं, बिल्कुल नहीं।", "शायद।", "मुझे नहीं पता।"],
+                "correct_index": 0
+            }
+        ]
+    else:
+        fallback_quiz = [
+            {
+                "question": f"What is the main concept of {term}?",
+                "options": ["It is a key scientific principle.", "It is a type of food.", "It is a planet.", "It is a historical event."],
+                "correct_index": 0
+            },
+            {
+                "question": f"Which field of science studies {term}?",
+                "options": ["Physics/Chemistry/Biology", "Literature", "History", "Arts"],
+                "correct_index": 0
+            },
+             {
+                "question": f"Is {term} important?",
+                "options": ["Yes, very important.", "No, not at all.", "Maybe.", "I don't know."],
+                "correct_index": 0
+            }
+        ]
     
     return json.dumps(fallback_quiz)
 
@@ -509,20 +535,25 @@ def generate_concept_tree(term: str, language: str = "en") -> str:
         "top_p": 0.9
     }
 
-    try:
-        response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=45)
-        
-        if response.status_code == 200:
-            result = response.json()
-            if 'choices' in result and len(result['choices']) > 0:
-                content = result['choices'][0]['message']['content']
-                # Cleanup
-                content = content.replace("```text", "").replace("```", "").strip()
-                return content
-    except Exception as e:
-        logger.error(f"Error generating concept tree: {e}")
+    for attempt in range(2):
+        try:
+            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=45)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if 'choices' in result and len(result['choices']) > 0:
+                    content = result['choices'][0]['message']['content']
+                    # Cleanup
+                    content = content.replace("```text", "").replace("```", "").strip()
+                    return content
+            elif response.status_code == 503:
+                if attempt == 0: continue
+                return "मॉडल अभी लोड हो रहा है (Model Loading). कृपया कुछ सेकंड बाद फिर से प्रयास करें।" if language == "hi" else "Model is loading. Please try again in 20 seconds."
+        except Exception as e:
+            if attempt == 0: continue
+            logger.error(f"Error generating concept tree: {e}")
     
-    return f"Could not generate tree for {term}."
+    return f"{term} के लिए वृक्ष नहीं बनाया जा सका।" if language == "hi" else f"Could not generate tree for {term}."
 
 # Optional: Quick test
 if __name__ == "__main__":

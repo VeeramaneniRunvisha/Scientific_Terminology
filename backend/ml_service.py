@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 HF_API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 HF_MODEL = os.getenv("HF_MODEL", "meta-llama/Llama-3.3-70B-Instruct")  # Fast, accurate, great Hindi support
+APP_VERSION = "1.0.2-Fix-Hindi-Tree"
 
 if not HF_API_TOKEN:
     logger.warning("HF_API_TOKEN is not set in environment variables.")

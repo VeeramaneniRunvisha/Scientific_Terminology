@@ -375,78 +375,46 @@ def generate_quiz(term: str, language: str = "en", explanation: str = "") -> str
         "top_p": 0.95
     }
 
-    for attempt in range(2):
+    for attempt in range(3):  # Increased to 3 retries
         try:
-            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=45)
+            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=50)
             
             if response.status_code == 200:
                 result = response.json()
                 if 'choices' in result and len(result['choices']) > 0:
                     content = result['choices'][0]['message']['content']
-                    
-                    # Cleanup content
                     content = content.replace("```json", "").replace("```", "").strip()
-                    
-                    # Try to extract JSON array using regex if there's extra text
                     json_match = re.search(r'\[.*\]', content, re.DOTALL)
-                    if json_match:
-                        content = json_match.group(0)
-                    
-                    # Validate JSON
+                    if json_match: content = json_match.group(0)
                     try:
                         json.loads(content)
                         return content
-                    except json.JSONDecodeError:
-                        logger.error(f"Invalid JSON generated: {content}")
-                else:
-                    logger.error(f"Unexpected API response format: {result}")
+                    except: logger.error(f"Invalid JSON: {content}")
+                else: logger.error(f"Format error: {result}")
             
-            elif response.status_code == 503:
-                # Still loading
-                if attempt == 0:
-                    continue
-                return "LOADING"
+            elif response.status_code == 429:
+                # Rate limited
+                if attempt == 2: return "BUSY"
+                import time
+                time.sleep(2) # Wait 2 seconds and retry
+                continue
 
-        except requests.exceptions.Timeout:
-            if attempt == 0: continue
+            elif response.status_code == 503:
+                if attempt == 2: return "LOADING"
+                import time
+                time.sleep(3) # Wait for model load
+                continue
+
+        except Exception as e:
+            if attempt == 2: logger.error(f"Quiz Error: {e}")
     
-    # Fallback Quiz (if API fails or is loading)
-    if language == "hi":
-        fallback_quiz = [
-            {
-                "question": f"{term} का मुख्य अवधारणा क्या है?",
-                "options": ["यह एक महत्वपूर्ण वैज्ञानिक सिद्धांत है।", "यह एक प्रकार का भोजन है।", "यह एक ग्रह है।", "यह एक ऐतिहासिक घटना है।"],
-                "correct_index": 0
-            },
-            {
-                "question": f"विज्ञान का कौन सा क्षेत्र {term} का अध्ययन करता है?",
-                "options": ["भौतिकी/रसायन विज्ञान/जीव विज्ञान", "साहित्य", "इतिहास", "कला"],
-                "correct_index": 0
-            },
-             {
-                "question": f"क्या {term} महत्वपूर्ण है?",
-                "options": ["हाँ, बहुत महत्वपूर्ण है।", "नहीं, बिल्कुल नहीं।", "शायद।", "मुझे नहीं पता।"],
-                "correct_index": 0
-            }
-        ]
-    else:
-        fallback_quiz = [
-            {
-                "question": f"What is the main concept of {term}?",
-                "options": ["It is a key scientific principle.", "It is a type of food.", "It is a planet.", "It is a historical event."],
-                "correct_index": 0
-            },
-            {
-                "question": f"Which field of science studies {term}?",
-                "options": ["Physics/Chemistry/Biology", "Literature", "History", "Arts"],
-                "correct_index": 0
-            },
-             {
-                "question": f"Is {term} important?",
-                "options": ["Yes, very important.", "No, not at all.", "Maybe.", "I don't know."],
-                "correct_index": 0
-            }
-        ]
+    # Fallback Quiz
+    fallback = [
+        {"question": f"Is {term} a scientific concept?", "options": ["Yes", "No", "Maybe", "Don't know"], "correct_index": 0},
+        {"question": f"The term '{term}' is used in science.", "options": ["True", "False", "Partially", "None"], "correct_index": 0},
+        {"question": f"Should we study {term}?", "options": ["Yes", "No", "It's optional", "None"], "correct_index": 0}
+    ]
+    return json.dumps(fallback)
     
     return json.dumps(fallback_quiz)
 
@@ -474,10 +442,9 @@ Physics
 
 RULES:
 - Use standard tree characters: ├──, └──, │
-- Mark the target term "{term}" with *asterisks*.
-- Keep it concise (max 10-12 lines).
-- Use academic/scientific terms.
-- No definitions, just terms.
+- Mark the target term "{term}" with [square brackets].
+- Keep it small (max 6-8 lines).
+- No definitions, just name of concepts.
 """
 
 PROMPT_TEMPLATE_TREE_HI = """आप एक शैक्षिक सहायक हैं।
@@ -532,29 +499,34 @@ def generate_concept_tree(term: str, language: str = "en") -> str:
             {"role": "user", "content": user_prompt}
         ],
         "max_tokens": 400,
-        "temperature": 0.4,
-        "top_p": 0.9
+        "temperature": 0.0,  # Stable and fast
+        "top_p": 1.0
     }
 
-    for attempt in range(2):
+    for attempt in range(3):
         try:
-            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=45)
+            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=50)
             
             if response.status_code == 200:
                 result = response.json()
                 if 'choices' in result and len(result['choices']) > 0:
                     content = result['choices'][0]['message']['content']
-                    # Cleanup
-                    content = content.replace("```text", "").replace("```", "").strip()
+                    content = content.replace("```", "").strip()
                     return content
+            elif response.status_code == 429:
+                if attempt == 2: return "AI is very busy right now (Rate Limit). Please wait 10 seconds and try again."
+                import time
+                time.sleep(2)
+                continue
             elif response.status_code == 503:
-                if attempt == 0: continue
-                return "मॉडल अभी लोड हो रहा है (Model Loading). कृपया कुछ सेकंड बाद फिर से प्रयास करें।" if language == "hi" else "Model is loading. Please try again in 20 seconds."
+                if attempt == 2: return "AI model is still loading. Please try again in a few seconds."
+                import time
+                time.sleep(3)
+                continue
         except Exception as e:
-            if attempt == 0: continue
-            logger.error(f"Error generating concept tree: {e}")
+            if attempt == 2: logger.error(f"Tree Error: {e}")
     
-    return f"{term} के लिए वृक्ष नहीं बनाया जा सका।" if language == "hi" else f"Could not generate tree for {term}."
+    return f"Unable to generate tree for {term} at this moment. Please try again." if language == "en" else f"{term} के लिए वृक्ष नहीं बनाया जा सका। कृपया पुनः प्रयास करें।"
 
 # Optional: Quick test
 if __name__ == "__main__":

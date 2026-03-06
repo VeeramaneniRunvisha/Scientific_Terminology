@@ -39,11 +39,17 @@ app.add_middleware(
 )
 
 # --- Database Configuration ---
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "mysql+pymysql://YOUR_DB_USER:YOUR_DB_PASSWORD@localhost/concept_clarity"
-)
-print(f"[DB] Using database URL: {DATABASE_URL.rsplit('/', 1)[-1]}")
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Render uses 'postgres://', but SQLAlchemy requires 'postgresql://'
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if not DATABASE_URL:
+    # Use MySQL for local development if nothing is set
+    DATABASE_URL = "mysql+pymysql://YOUR_DB_USER:YOUR_DB_PASSWORD@localhost/concept_clarity"
+
+print(f"[DB] Initializing database...")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -3,6 +3,7 @@ uvicorn
 pydantic
 sqlalchemy
 pymysql
+psycopg2-binary
 gunicorn
 python-jose[cryptography]
 passlib[bcrypt]

@@ -192,7 +192,7 @@ async function explainTerm() {
             }
         }
 
-        const response = await fetch("http://127.0.0.1:8000/explain", {
+        const response = await fetch(`${API_URL}/explain`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -560,7 +560,7 @@ async function loadChatHistory(userEmail = null, limit = 50) {
             return guestHistory;
         }
 
-        let url = `http://127.0.0.1:8000/chat/history?limit=${limit}`;
+        let url = `${API_URL}/chat/history?limit=${limit}`;
         if (userEmail) {
             url += `&user_email=${encodeURIComponent(userEmail)}`;
         }
@@ -893,7 +893,7 @@ async function submitFeedback() {
     };
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/feedback', {
+        const response = await fetch(`${API_URL}/feedback`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -913,7 +913,7 @@ async function submitFeedback() {
         console.error('Error submitting feedback:', error);
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/feedback', {
+            const response = await fetch(`${API_URL}/feedback`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1003,7 +1003,7 @@ async function generateQuiz(term, btnElement) {
     container.innerHTML = `<p style="text-align:center; color: #ddd;">${t('generatingQuiz')}</p>`;
 
     try {
-        const response = await fetch('http://127.0.0.1:8000/quiz', {
+        const response = await fetch(`${API_URL}/quiz`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ term: term, language: currentLang })
@@ -1340,7 +1340,7 @@ async function generateConceptTree(term, btnElement) {
 
     try {
         const currentLang = getCurrentLanguage();
-        const response = await fetch('http://127.0.0.1:8000/concept_tree', {
+        const response = await fetch(`${API_URL}/concept_tree`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ term: term, language: currentLang })
@@ -1462,7 +1462,7 @@ async function updatePassword() {
     }
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/change-password", {
+        const response = await fetch(`${API_URL}/change-password`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

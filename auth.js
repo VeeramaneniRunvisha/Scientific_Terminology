@@ -1,3 +1,5 @@
+const API_URL = 'https://scientific-backend.onrender.com';
+
 // Global Toggle Password Function
 function togglePassword(fieldId) {
     const input = document.getElementById(fieldId);
@@ -103,7 +105,7 @@ async function register() {
     }
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/register", {
+        const response = await fetch(`${API_URL}/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -161,7 +163,7 @@ async function login() {
     }
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/login", {
+        const response = await fetch(`${API_URL}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -212,7 +214,7 @@ async function handleForgotPassword() {
     }
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/forgot-password", {
+        const response = await fetch(`${API_URL}/forgot-password`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })
@@ -258,7 +260,7 @@ async function handleResetPassword() {
     }
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/reset-password", {
+        const response = await fetch(`${API_URL}/reset-password`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, new_password: newPassword })

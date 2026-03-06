@@ -133,7 +133,7 @@ def get_password_hash(password):
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -260,7 +260,7 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     hashed_password = get_password_hash(user.password)
     
     # Save current timestamp
-    timestamp = datetime.now().isoformat()
+    timestamp = datetime.now(IST).isoformat()
     
     new_user = User(name=user.name, email=user.email, password=hashed_password, created_at=timestamp)
     db.add(new_user)
@@ -320,7 +320,7 @@ def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db))
 
 @app.post("/track/quiz")
 def track_quiz(request: TrackQuizRequest, db: Session = Depends(get_db)):
-    timestamp = datetime.now().isoformat()
+    timestamp = datetime.now(IST).isoformat()
     new_result = QuizResult(
         user_email=request.user_email,
         term=request.term,
@@ -333,7 +333,7 @@ def track_quiz(request: TrackQuizRequest, db: Session = Depends(get_db)):
 
 @app.post("/track/video")
 def track_video(request: TrackVideoRequest, db: Session = Depends(get_db)):
-    timestamp = datetime.now().isoformat()
+    timestamp = datetime.now(IST).isoformat()
     new_log = VideoLog(
         user_email=request.user_email,
         term=request.term,
@@ -346,7 +346,7 @@ def track_video(request: TrackVideoRequest, db: Session = Depends(get_db)):
 
 @app.post("/track/tree")
 def track_tree(request: TrackTreeRequest, db: Session = Depends(get_db)):
-    timestamp = datetime.now().isoformat()
+    timestamp = datetime.now(IST).isoformat()
     new_log = ConceptTreeLog(
         user_email=request.user_email,
         term=request.term,
@@ -491,7 +491,7 @@ def get_admin_comparison(days: int = 30, db: Session = Depends(get_db)):
     Get aggregated daily counts for Quiz, YouTube, and Concept Tree usage
     over the last N days.
     """
-    end_date = datetime.now()
+    end_date = datetime.now(IST)
     start_date = end_date - timedelta(days=days)
     
     # Helper to process query into {date_str: count}

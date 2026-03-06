@@ -1,7 +1,5 @@
 // Track selected difficulty level
-const API_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
-    ? 'http://127.0.0.1:8000'
-    : 'https://milestone-1-backend.onrender.com'; // PLACEHOLDER: Change this to your real Render backend URL once deployed.
+const API_URL = 'https://scientific-backend.onrender.com';
 let selectedLevel = 'beginner'; // Default level
 
 // Function to handle level selection

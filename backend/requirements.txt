@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+pymysql
+gunicorn
+python-jose[cryptography]
+passlib[bcrypt]
+requests
+python-dotenv
+youtube-search-python

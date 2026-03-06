@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concept Clarity</title>
+    <link rel="stylesheet" href="style.css?v=24">
+
+    <!-- 🔐 Login protection -->
+
+</head>
+
+<body>
+
+    <!-- Language Selector and User Profile Section -->
+    <div class="user-profile">
+        <div class="language-selector-container">
+            <select id="languageSelector" class="language-selector" onchange="changeLanguage(this.value)">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+            </select>
+        </div>
+        <div class="user-avatar" onclick="toggleProfileMenu()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+        </div>
+        <div class="user-info" onclick="toggleProfileMenu()">
+            <span class="user-email" id="userEmail" data-i18n="loading">Loading...</span>
+        </div>
+
+        <!-- Profile Dropdown Menu -->
+        <div id="profileMenu" class="profile-menu">
+            <div class="profile-menu-header">
+                <span class="user-email" id="profileMenuEmail">user@example.com</span>
+            </div>
+            <div class="profile-menu-divider"></div>
+            <div class="profile-menu-item" onclick="event.stopPropagation(); openFeedbackModal();">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span data-i18n="giveFeedback">Give Feedback</span>
+            </div>
+            <div class="profile-menu-item" onclick="event.stopPropagation(); openAboutModal();">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span data-i18n="about">About</span>
+            </div>
+            <div class="profile-menu-item" onclick="event.stopPropagation(); openContactModal();">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <span data-i18n="contact">Contact</span>
+            </div>
+            <div class="profile-menu-divider"></div>
+            <div class="profile-menu-item" onclick="event.stopPropagation(); openSettingsModal();">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span data-i18n="settings">Settings</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 data-i18n="appTitle">Concept Clarity</h1>
+        <p data-i18n="appDescription">Master scientific terms with simple explanations.</p>
+
+        <!-- Level Selection -->
+        <div class="level-selector">
+            <h3 style="margin-bottom: 15px; color: #333; font-size: 1.1rem;" data-i18n="chooseLearningLevel">Choose Your
+                Learning Level:</h3>
+            <div class="level-cards">
+                <div class="level-card active" data-level="beginner" onclick="selectLevel('beginner')">
+                    <h4 data-i18n="beginner">Beginner</h4>
+                    <p data-i18n="beginnerDesc">Simple & clear explanations</p>
+                </div>
+                <div class="level-card" data-level="intermediate" onclick="selectLevel('intermediate')">
+                    <h4 data-i18n="intermediate">Intermediate</h4>
+                    <p data-i18n="intermediateDesc">More detailed insights</p>
+                </div>
+                <div class="level-card" data-level="advanced" onclick="selectLevel('advanced')">
+                    <h4 data-i18n="advanced">Advanced</h4>
+                    <p data-i18n="advancedDesc">Technical & comprehensive</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="termInput" data-i18n="inputPlaceholder"
+                placeholder="Enter a term (e.g., gravity)...">
+            <button id="micBtn" onclick="startVoiceSearch()" data-i18n="speakTitle" title="Speak">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </button>
+            <button onclick="explainTerm()" data-i18n="explainButton">Explain It</button>
+        </div>
+
+        <div id="outputBox"></div>
+
+        <!-- Buttons container -->
+        <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: center;">
+            <button onclick="toggleHistory()" data-i18n="historyButton"
+                style="background: #6c5ce7; width: auto; padding: 8px 20px; font-size: 0.9rem;">
+                History
+            </button>
+            <button id="loginBtn" onclick="window.location.href='login.html'" data-i18n="loginButton"
+                style="background: #00b894; width: auto; padding: 8px 20px; font-size: 0.9rem; display: none;">
+                Login
+            </button>
+            <button id="logoutBtn" onclick="logout()" data-i18n="logoutButton"
+                style="background: #ff6b6b; width: auto; padding: 8px 20px; font-size: 0.9rem; display: none;">
+                Logout
+            </button>
+        </div>
+
+        <!-- History Modal -->
+        <div id="historyModal" class="history-modal">
+            <div class="history-content">
+                <div class="history-header">
+                    <h2 data-i18n="searchHistory">Search History</h2>
+                    <button onclick="toggleHistory()" class="close-btn">&times;</button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <p style="text-align: center; color: #666;" data-i18n="loading">Loading history...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="translations.js?v=2"></script>
+    <script src="script.js?v=24"></script>
+
+    <script>
+        function logout() {
+            localStorage.removeItem("user");
+            window.location.href = "login.html";
+        }
+
+        // Display user email on page load
+        window.addEventListener('DOMContentLoaded', function () {
+            const userStr = localStorage.getItem('user');
+            const userEmailElement = document.getElementById('userEmail');
+
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    userEmailElement.textContent = user.email;
+                } catch (e) {
+                    userEmailElement.textContent = 'Unknown User';
+                }
+            } else {
+                userEmailElement.textContent = 'Guest';
+                // Hide logout button for guest
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) logoutBtn.style.display = 'none';
+            }
+        });
+    </script>
+
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content feedback-modal">
+            <div class="modal-header">
+                <h2 data-i18n="rateExperience">Rate Your Experience</h2>
+                <span class="close-modal" onclick="closeFeedbackModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="rating-section">
+                    <label data-i18n="yourRating">Your Rating</label>
+                    <div class="star-rating" id="starRating">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                    <div class="rating-text" id="ratingText"></div>
+                </div>
+                <div class="comment-section">
+                    <label data-i18n="comments">Comments (Optional)</label>
+                    <textarea id="feedbackComment" rows="4" maxlength="500" data-i18n-placeholder="commentsPlaceholder"
+                        placeholder="Share your thoughts about the app..."></textarea>
+                    <div class="char-count"><span id="charCount">0</span>/500</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeFeedbackModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn-primary" onclick="submitFeedback()" data-i18n="submitFeedback">Submit
+                    Feedback</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content feedback-modal">
+            <div class="modal-header">
+                <h2 data-i18n="aboutUs">About Us</h2>
+                <span class="close-modal" onclick="closeAboutModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="aboutContent" style="line-height: 1.6; font-size: 0.95rem;">
+                    <!-- Content will be injected from translation -->
+                    <p data-i18n="aboutContent"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal">
+        <div class="modal-content feedback-modal">
+            <div class="modal-header">
+                <h2 data-i18n="contactUs">Contact Us</h2>
+                <span class="close-modal" onclick="closeContactModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="contactContent" style="line-height: 1.6; font-size: 0.95rem;">
+                    <!-- Content will be injected from translation -->
+                    <p data-i18n="contactContent"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h2 data-i18n="settings">Settings</h2>
+                <span class="close-modal" onclick="closeSettingsModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- Account Section -->
+                <div class="settings-section">
+                    <h3 data-i18n="account">Account</h3>
+                    <div class="settings-item">
+                        <label data-i18n="fullName">Full Name</label>
+                        <input type="text" id="settingsName" readonly value="Guest" class="settings-input">
+                    </div>
+                    <div class="settings-item">
+                        <label data-i18n="email">Email</label>
+                        <input type="text" id="settingsEmail" readonly value="user@example.com" class="settings-input">
+                    </div>
+
+                    <!-- Change Password Section -->
+                    <button class="btn-secondary" onclick="toggleChangePassword()"
+                        style="width: 100%; margin-top: 10px;" data-i18n="changePassword">Change Password</button>
+
+                    <div id="changePasswordForm"
+                        style="display: none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px;">
+                        <div class="settings-item">
+                            <label data-i18n="currentPassword">Current Password</label>
+                            <input type="password" id="currentPassword" class="settings-input">
+                        </div>
+                        <div class="settings-item">
+                            <label data-i18n="newPassword">New Password</label>
+                            <input type="password" id="newPassword" class="settings-input">
+                        </div>
+                        <button class="btn-primary" onclick="updatePassword()" style="width: 100%; margin-top: 10px;"
+                            data-i18n="updatePassword">Update Password</button>
+                    </div>
+                </div>
+
+                <!-- Learning Preferences -->
+                <div class="settings-section">
+                    <h3 data-i18n="learningPreferences">Learning Preferences</h3>
+                    <div class="settings-item">
+                        <label data-i18n="defaultLevel">Default Level</label>
+                        <select id="defaultLevelSelect" class="settings-select" onchange="saveSettings()">
+                            <option value="beginner" data-i18n="beginner">Beginner</option>
+                            <option value="intermediate" data-i18n="intermediate">Intermediate</option>
+                            <option value="advanced" data-i18n="advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <div class="settings-item">
+                        <label data-i18n="language">Language</label>
+                        <select id="settingsLanguageSelect" class="settings-select"
+                            onchange="changeLanguage(this.value); saveSettings();">
+                            <option value="en">English</option>
+                            <option value="hi">हिंदी</option>
+                        </select>
+                    </div>
+                </div>
+
+
+
+                <!-- Audio -->
+                <div class="settings-section">
+                    <h3 data-i18n="audio">Audio</h3>
+                    <div class="settings-item">
+                        <label data-i18n="audioSpeed">Audio Speed</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="range" id="audioSpeedRange" min="0.5" max="2" step="0.25" value="1"
+                                oninput="document.getElementById('audioSpeedValue').innerText = this.value + 'x'"
+                                onchange="saveSettings()" style="flex: 1;">
+                            <span id="audioSpeedValue">1x</span>
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <label data-i18n="autoPlay">Auto-play Audio</label>
+                        <input type="checkbox" id="autoPlayCheckbox" onchange="saveSettings()">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeSettingsModal()" data-i18n="done">Done</button>
+            </div>
+        </div>
+    </div>
+
+
+
+</body>
+
+</html>

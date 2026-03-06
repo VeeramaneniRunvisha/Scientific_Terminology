@@ -1,0 +1,27 @@
+# Environments
+**/.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+env/
+venv/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Databases
+*.db
+*.sqlite
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+.gemini/

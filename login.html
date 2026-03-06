@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Concept Clarity</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Language Selector -->
+    <div class="language-selector-auth">
+        <select id="languageSelector" class="language-selector" onchange="changeLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="hi">हिंदी</option>
+        </select>
+    </div>
+
+    <div class="auth-container">
+        <h2 data-i18n="welcomeBack">Welcome Back</h2>
+        <p data-i18n="loginSubtitle">Login to continue your learning journey.</p>
+
+        <label class="input-label" data-i18n="username">Username</label>
+        <input type="email" id="loginEmail" data-i18n="enterUsername" placeholder="Enter your Username">
+
+        <label class="input-label" data-i18n="password">Password</label>
+        <div class="password-wrapper">
+            <input type="password" id="loginPassword" data-i18n="enterPassword" placeholder="Enter your password">
+            <span class="toggle-password" onclick="togglePassword('loginPassword')">👁️</span>
+        </div>
+
+        <div class="options-row">
+            <label class="remember-me">
+                <input type="checkbox" id="rememberMe"> <span data-i18n="rememberMe">Remember me</span>
+            </label>
+            <a href="forgot_password.html" class="forgot-password" data-i18n="forgotPassword">Forgot Password?</a>
+        </div>
+
+        <button onclick="login()" data-i18n="loginButton">Login</button>
+
+        <p class="link-text">
+            <span data-i18n="noAccount">Don't have an account?</span>
+            <a href="register.html" data-i18n="signUp">Sign Up</a>
+        </p>
+
+        <p class="link-text" style="font-size: 0.9em; margin-top: 10px;">
+            <a href="index.html" data-i18n="continueAsGuest">Continue as Guest</a>
+        </p>
+
+        <div id="loginMsg"></div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Check for redirect reason
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('reason') === 'limit') {
+                const msg = document.getElementById("loginMsg");
+                msg.innerHTML = `<p class='error'>${t('usageLimitReached')}</p>`;
+            } else {
+                // Check if user has remembered email (from auth.js logic)
+                const savedEmail = localStorage.getItem("rememberedEmail");
+                if (savedEmail && document.getElementById("loginEmail")) {
+                    document.getElementById("loginEmail").value = savedEmail;
+                    document.getElementById("rememberMe").checked = true;
+                }
+            }
+        };
+    </script>
+
+</body>
+
+</html>

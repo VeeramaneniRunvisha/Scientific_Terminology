@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Concept Clarity</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Language Selector -->
+    <div class="language-selector-auth">
+        <select id="languageSelector" class="language-selector" onchange="changeLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="hi">हिंदी</option>
+        </select>
+    </div>
+
+    <div class="auth-container">
+        <h2 data-i18n="joinUs">Join Us</h2>
+        <p data-i18n="registerSubtitle">Create an account to start exploring.</p>
+
+        <label class="input-label" data-i18n="fullName">Full Name</label>
+        <input type="text" id="regName" data-i18n="fullNamePlaceholder" placeholder="Full Name">
+
+        <label class="input-label" data-i18n="email">Email</label>
+        <input type="email" id="regEmail" data-i18n="emailPlaceholder" placeholder="Email Address">
+
+        <label class="input-label" data-i18n="password">Password</label>
+        <div class="password-wrapper">
+            <input type="password" id="regPassword" data-i18n="createPassword" placeholder="Create Password"
+                oninput="checkStrength()">
+            <span class="toggle-password" onclick="togglePassword('regPassword')">👁️</span>
+        </div>
+        <div id="passwordStrength" class="strength-meter"></div>
+
+        <label class="input-label" data-i18n="confirmPassword">Confirm Password</label>
+        <div class="password-wrapper">
+            <input type="password" id="regConfirmPassword" data-i18n="confirmPasswordPlaceholder"
+                placeholder="Confirm Password">
+        </div>
+
+        <button onclick="register()" data-i18n="registerButton">Register</button>
+
+        <p class="link-text">
+            <span data-i18n="alreadyHaveAccount">Already have an account?</span> <a href="login.html"
+                data-i18n="login">Login</a>
+        </p>
+
+        <p class="link-text" style="font-size: 0.9em; margin-top: 10px;">
+            <a href="index.html" data-i18n="continueAsGuest">Continue as Guest</a>
+        </p>
+
+        <div id="registerMsg"></div>
+    </div>
+
+    <script src="translations.js"></script>
+    <script src="auth.js"></script>
+
+</body>
+
+</html>

@@ -32,7 +32,11 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto
 # Allow CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all origins for easier deployment, restrict later
+    allow_origins=[
+        "https://scientific-terms.onrender.com",
+        "http://127.0.0.1:5500",  # Local development
+        "http://localhost:5500"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

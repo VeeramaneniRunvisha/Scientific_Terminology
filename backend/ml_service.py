@@ -10,11 +10,53 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configuration - Using new router endpoint
+# Configuration
 HF_API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-HF_MODEL = os.getenv("HF_MODEL", "meta-llama/Llama-3.3-70B-Instruct")  # Reverted as requested
-APP_VERSION = "1.0.3-Fallback-Trees"
+PRIMARY_MODEL = os.getenv("HF_MODEL", "meta-llama/Llama-3.3-70B-Instruct")
+FALLBACK_MODELS = [
+    "Qwen/Qwen2.5-72B-Instruct",
+    "mistralai/Mistral-7B-Instruct-v0.3",
+    "google/gemma-2-9b-it"
+]
+APP_VERSION = "1.0.4-Smart-Fallback"
+
+# Fast Static Explanations for common terms (instant load)
+STATIC_EXPLANATIONS = {
+    "photosynthesis": """Definition:
+Photosynthesis is how plants use sunlight to turn water and air into food.
+
+Advantage:
+It creates oxygen, which is what humans and animals need to breathe.
+
+Disadvantage:
+It can't happen at night or in deep water where there's no sunlight.
+
+Related Terms:
+Chlorophyll, Sunlight, Oxygen""",
+    "gravity": """Definition:
+Gravity is an invisible pull that keeps everything on the ground and planets orbiting the sun.
+
+Advantage:
+It prevents us and the atmosphere from floating away into space.
+
+Disadvantage:
+It makes it hard to lift heavy things or fly without a lot of power.
+
+Related Terms:
+Force, Mass, Weight""",
+    "atom": """Definition:
+An atom is the smallest building block of everything in the universe.
+
+Advantage:
+Different types of atoms combine to create every material we see, like water or metal.
+
+Disadvantage:
+Individual atoms are so tiny that they can't be seen with normal microscopes.
+
+Related Terms:
+Proton, Neutron, Electron"""
+}
 
 if not HF_API_TOKEN:
     logger.warning("HF_API_TOKEN is not set in environment variables.")
@@ -259,73 +301,63 @@ def generate_explanation(term: str, level: str = "beginner", language: str = "en
     user_prompt = f'Explain "{term}"'
 
     payload = {
-        "model": HF_MODEL,
+        "model": PRIMARY_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
-        "max_tokens": 600,  # Increased to 600 to prevent cutoff in advanced level responses
-        "temperature": 0.5,  # Lower temperature for more focused output
+        "max_tokens": 600,
+        "temperature": 0.5,
         "top_p": 0.9
     }
 
-    for attempt in range(2):  # Auto-retry once on timeout
-        try:
-            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=45)
+    # Check Static Fallback first (Instant)
+    term_key = term.lower().strip()
+    if language == "en" and term_key in STATIC_EXPLANATIONS:
+        return STATIC_EXPLANATIONS[term_key]
 
-            if response.status_code == 200:
-                result = response.json()
-                # Extract content from chat completion format
-                if 'choices' in result and len(result['choices']) > 0:
-                    content = result['choices'][0]['message']['content'].strip()
-                    
-                    # Clean up common AI pleasantries to ensure "explanation only"
-                    pleasantries = [
-                        "certainly!", "here is", "here's", "sure,", "i can help", 
-                        "according to", "based on", "the following is"
-                    ]
-                    lines = content.split('\n')
-                    if lines and any(p in lines[0].lower() for p in pleasantries) and len(lines) > 1:
-                        # If the first line is a pleasantry and there's more content, skip it
-                        if ":" not in lines[0]: # Don't skip if it's a header like "Definition:"
-                             content = '\n'.join(lines[1:]).strip()
+    models_to_try = [PRIMARY_MODEL] + FALLBACK_MODELS
+    
+    for current_model in models_to_try:
+        payload["model"] = current_model
+        for attempt in range(2):  # Auto-retry each model once
+            try:
+                response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=40)
 
-                    return content
+                if response.status_code == 200:
+                    result = response.json()
+                    if 'choices' in result and len(result['choices']) > 0:
+                        content = result['choices'][0]['message']['content'].strip()
+                        # Clean up common AI pleasantries
+                        pleasantries = ["certainly!", "here is", "here's", "sure,", "i can help"]
+                        lines = content.split('\n')
+                        if lines and any(p in lines[0].lower() for p in pleasantries) and len(lines) > 1:
+                            if ":" not in lines[0]: content = '\n'.join(lines[1:]).strip()
+                        return content
+                    continue # Try next model if format is weird
+
+                # If quota/rate limited, try the next model in the list
+                elif response.status_code in [402, 429]:
+                    logger.warning(f"Model {current_model} reached quota/rate limit. Trying next model...")
+                    break # Break out of attempt loop to try next model
+
+                elif response.status_code == 503:
+                    if attempt == 0:
+                        import time
+                        time.sleep(2)
+                        continue
+                    break # Try next model if still 503
+
                 else:
-                    logger.error(f"Unexpected API response format: {result}")
-                    return "Error: Unexpected response format from AI service."
+                    if attempt == 1: break # Try next model
+                    continue
 
-            # Handle model loading (503 Service Unavailable is common for cold starts)
-            elif response.status_code == 503:
-                try:
-                    error_data = response.json()
-                    estimated_time = error_data.get("estimated_time", 20)
-                    logger.info(f"Model is loading. Estimated time: {estimated_time}s")
-                    return f"Model is currently loading (approx {estimated_time:.0f}s). Please try again shortly."
-                except:
-                    return "Model is currently loading. Please try again shortly."
+            except Exception as e:
+                logger.error(f"Error with {current_model}: {e}")
+                if attempt == 1: break
+                continue
 
-            elif response.status_code == 402:
-                logger.error("AI API Quota reached (Status 402).")
-                return "AI is currently busy. Please try again after 10-20 seconds."
-            
-            elif response.status_code == 429:
-                logger.warning("AI API Rate Limit reached (Status 429).")
-                return "AI is currently busy. Please try again after 10-20 seconds."
-
-            else:
-                logger.error(f"API Error {response.status_code}: {response.text}")
-                return f"Error: Failed to generate explanation (Status {response.status_code})."
-
-        except requests.exceptions.Timeout:
-            if attempt == 0:
-                logger.warning("API Request timed out on attempt 1, retrying...")
-                continue  # Retry once
-            logger.error("API Request timed out after retry")
-            return "Error: Request timed out. The AI service is slow right now."
-        except Exception as e:
-            logger.error(f"Exception during API call: {e}")
-            return f"Error: An internal error occurred ({str(e)})."
+    return "AI is currently very busy. Please try again after 1 minute."
 
 import json
 import re

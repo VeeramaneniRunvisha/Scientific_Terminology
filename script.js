@@ -1003,10 +1003,17 @@ async function generateQuiz(term, btnElement) {
     container.innerHTML = `<p style="text-align:center; color: #ddd;">${t('generatingQuiz')}</p>`;
 
     try {
+        const explanationElement = document.getElementById('explanationText');
+        const explanationText = explanationElement ? explanationElement.textContent : "";
+        
         const response = await fetch(`${API_URL}/quiz`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ term: term, language: currentLang })
+            body: JSON.stringify({ 
+                term: term, 
+                language: currentLang,
+                explanation: explanationText
+            })
         });
 
         const data = await response.json();

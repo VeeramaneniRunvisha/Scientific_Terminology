@@ -195,71 +195,34 @@ RULES: Proper scientific terminology, all 4 sections required, focused. Hindi ON
 }
 
 # Quiz Prompt Templates
-PROMPT_TEMPLATE_QUIZ = """You are a quiz generator.
-Create 3 multiple-choice questions (MCQs) about "{term}", based on the following explanation:
+PROMPT_TEMPLATE_QUIZ = """Generate 3 MCQs about "{term}" using the EXPLANATION below.
+Return a RAW JSON ARRAY ONLY. NO markdown tags like ```json.
 
 EXPLANATION:
 "{explanation}"
 
-OUTPUT FORMAT:
-Return a raw JSON array. No markdown.
+JSON FORMAT:
 [
   {{
-    "question": "Question based on the explanation?",
-    "options": ["A", "B", "C", "D"],
+    "question": "A short question based on the text?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
     "correct_index": 0
   }},
-  {{
-    "question": "Another question from the text?",
-    "options": ["X", "Y", "Z", "W"],
-    "correct_index": 1
-  }},
-  {{
-    "question": "Final question?",
-    "options": ["1", "2", "3", "4"],
-    "correct_index": 2
-  }}
-]
+  ...
+]"""
 
-RULES:
-- "correct_index" is 0-3.
-- Questions MUST be relevant to the provided EXPLANATION.
-- Keep questions short.
-- JSON only.
-"""
+PROMPT_TEMPLATE_QUIZ_HI = """"{explanation}" के आधार पर "{term}" के बारे में 3 MCQs तैयार करें।
+केवल RAW JSON सरणी ही लौटाएँ।
 
-PROMPT_TEMPLATE_QUIZ_HI = """आप एक प्रश्नोत्तरी जनरेटर हैं।
-"{term}" के बारे में 3 बहुविकल्पीय प्रश्न (MCQ) बनाएं, जो निम्नलिखित स्पष्टीकरण पर आधारित हों:
-
-स्पष्टीकरण (EXPLANATION):
-"{explanation}"
-
-आउटपुट प्रारूप (OUTPUT FORMAT):
-केवल JSON सरणी लौटाएं। कोई मार्कडाउन नहीं।
+प्रारूप:
 [
   {{
-    "question": "स्पष्टीकरण पर आधारित प्रश्न?",
-    "options": ["A", "B", "C", "D"],
+    "question": "प्रश्न?",
+    "options": ["विकल्प ए", "विकल्प बी", "विकल्प सी", "विकल्प डी"],
     "correct_index": 0
   }},
-  {{
-    "question": "पाठ से एक और प्रश्न?",
-    "options": ["X", "Y", "Z", "W"],
-    "correct_index": 1
-  }},
-  {{
-    "question": "अंतिम प्रश्न?",
-    "options": ["1", "2", "3", "4"],
-    "correct_index": 2
-  }}
-]
-
-नियम:
-- "correct_index" 0-3 है।
-- प्रश्न प्रदान किए गए स्पष्टीकरण (EXPLANATION) के लिए प्रासंगिक होने चाहिए।
-- प्रश्न छोटे रखें।
-- केवल JSON।
-"""
+  ...
+]"""
 
 def generate_explanation(term: str, level: str = "beginner", language: str = "en") -> str:
     """
@@ -414,38 +377,41 @@ def generate_quiz(term: str, language: str = "en", explanation: str = "") -> str
         "top_p": 0.95
     }
 
-    for attempt in range(3):  # Increased to 3 retries
+    for attempt in range(2):
         try:
-            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=50)
+            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=40)
             
             if response.status_code == 200:
                 result = response.json()
                 if 'choices' in result and len(result['choices']) > 0:
-                    content = result['choices'][0]['message']['content']
+                    content = result['choices'][0]['message']['content'].strip()
+                    # Clean up markdown if any
                     content = content.replace("```json", "").replace("```", "").strip()
-                    json_match = re.search(r'\[.*\]', content, re.DOTALL)
-                    if json_match: content = json_match.group(0)
+                    # Find first [ and last ]
+                    start = content.find("[")
+                    end = content.rfind("]")
+                    if start != -1 and end != -1:
+                        content = content[start:end+1]
                     try:
                         json.loads(content)
                         return content
-                    except: logger.error(f"Invalid JSON: {content}")
+                    except: logger.error(f"Invalid Quiz JSON: {content}")
                 else: logger.error(f"Format error: {result}")
             
-            elif response.status_code == 429:
-                # Rate limited
-                if attempt == 2: return "BUSY"
+            elif response.status_code == 429 or response.status_code == 402:
+                if attempt == 1: break # Try fallback
                 import time
-                time.sleep(2) # Wait 2 seconds and retry
+                time.sleep(1)
                 continue
 
             elif response.status_code == 503:
-                if attempt == 2: return "LOADING"
+                if attempt == 1: break # Try fallback
                 import time
-                time.sleep(3) # Wait for model load
+                time.sleep(2)
                 continue
 
         except Exception as e:
-            if attempt == 2: logger.error(f"Quiz Error: {e}")
+            if attempt == 1: logger.error(f"Quiz Error: {e}")
     
     # If AI fails, try specific static fallback first
     term_key = term.lower().strip()

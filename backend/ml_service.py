@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 # Configuration - Using new router endpoint
 HF_API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-HF_MODEL = os.getenv("HF_MODEL", "meta-llama/Llama-3.3-70B-Instruct")  # Fast, accurate, great Hindi support
-APP_VERSION = "1.0.2-Fix-Hindi-Tree"
+HF_MODEL = os.getenv("HF_MODEL", "meta-llama/Llama-3.3-70B-Instruct")  # Reverted as requested
+APP_VERSION = "1.0.3-Fallback-Trees"
 
 if not HF_API_TOKEN:
     logger.warning("HF_API_TOKEN is not set in environment variables.")
@@ -314,8 +314,20 @@ def generate_explanation(term: str, level: str = "beginner", language: str = "en
                 result = response.json()
                 # Extract content from chat completion format
                 if 'choices' in result and len(result['choices']) > 0:
-                    content = result['choices'][0]['message']['content']
-                    return content.strip()
+                    content = result['choices'][0]['message']['content'].strip()
+                    
+                    # Clean up common AI pleasantries to ensure "explanation only"
+                    pleasantries = [
+                        "certainly!", "here is", "here's", "sure,", "i can help", 
+                        "according to", "based on", "the following is"
+                    ]
+                    lines = content.split('\n')
+                    if lines and any(p in lines[0].lower() for p in pleasantries) and len(lines) > 1:
+                        # If the first line is a pleasantry and there's more content, skip it
+                        if ":" not in lines[0]: # Don't skip if it's a header like "Definition:"
+                             content = '\n'.join(lines[1:]).strip()
+
+                    return content
                 else:
                     logger.error(f"Unexpected API response format: {result}")
                     return "Error: Unexpected response format from AI service."
@@ -329,6 +341,14 @@ def generate_explanation(term: str, level: str = "beginner", language: str = "en
                     return f"Model is currently loading (approx {estimated_time:.0f}s). Please try again shortly."
                 except:
                     return "Model is currently loading. Please try again shortly."
+
+            elif response.status_code == 402:
+                logger.error("AI API Quota reached (Status 402).")
+                return "Error: AI Free Quota reached. Please try again tomorrow or switch to a lighter model."
+            
+            elif response.status_code == 429:
+                logger.warning("AI API Rate Limit reached (Status 429).")
+                return "Error: Too many people using the AI right now. Please wait 10 seconds and try again."
 
             else:
                 logger.error(f"API Error {response.status_code}: {response.text}")
@@ -442,7 +462,7 @@ Physics
 
 RULES:
 - Use standard tree characters: ├──, └──, │
-- Mark the target term "{term}" with [square brackets].
+- Mark the target term "{term}" with *asterisks* (e.g., *{term}*).
 - Keep it small (max 6-8 lines).
 - No definitions, just name of concepts.
 """
@@ -476,6 +496,95 @@ PROMPT_TEMPLATE_TREE_HI = """आप एक शैक्षिक सहायक
 - कोई परिभाषा नहीं, केवल शब्द।
 """
 
+# Static fallback trees for common terms
+STATIC_TREES = {
+    "photosynthesis": """Biology
+├── Botany
+│   ├── Plant Physiology
+│   │   ├── *Photosynthesis*
+│   │   │   ├── Light-dependent Reactions
+│   │   │   └── Calvin Cycle
+│   │   └── Respiration
+│   └── Ecology
+└── Biochemistry""",
+    "gravity": """Physics
+├── Mechanics
+│   ├── Classical Mechanics
+│   │   ├── *Gravity*
+│   │   │   ├── Newton's Laws
+│   │   │   └── Orbital Mechanics
+│   │   └── Kinetic Energy
+│   └── General Relativity
+└── Astrophysics""",
+    "atom": """Chemistry
+├── Atomic Theory
+│   ├── Subatomic Particles
+│   │   ├── *Atom*
+│   │   │   ├── Nucleus (Protons/Neutrons)
+│   │   │   └── Electron Cloud
+│   │   └── Quantum Mechanics
+│   └── Molecular Structure
+└── Nuclear Physics""",
+    "cell": """Biology (Life)
+├── Cell Biology
+│   ├── Types of Cells
+│   │   ├── *Cell*
+│   │   │   ├── Prokaryotic Cells
+│   │   │   └── Eukaryotic Cells
+│   │   └── Cell Structure
+│   └── Molecular Biology
+└── Genetics""",
+    "energy": """Physics
+├── Fundamental Science
+│   ├── Physical Quantities
+│   │   ├── *Energy*
+│   │   │   ├── Potential Energy
+│   │   │   └── Kinetic Energy
+│   │   └── Work and Power
+│   └── Thermodynamics
+└── Quantum Physics""",
+    "evolution": """Biology
+├── Evolutionary Biology
+│   ├── Mechanisms
+│   │   ├── *Evolution*
+│   │   │   ├── Natural Selection
+│   │   │   └── Genetic Drift
+│   │   └── Speciation
+│   └── Paleontology
+└── Genetics"""
+}
+
+# Static fallback trees for common terms in Hindi
+STATIC_TREES_HI = {
+    "photosynthesis": """जीव विज्ञान (Biology)
+├── वनस्पति विज्ञान (Botany)
+│   ├── पादप शरीर क्रिया विज्ञान
+│   │   ├── *प्रकाश संश्लेषण* (Photosynthesis)
+│   │   │   ├── प्रकाश-निर्भर अभिक्रियाएं
+│   │   │   └── केल्विन चक्र
+│   │   └── श्वसन
+│   └── पारिस्थितिकी
+└── जैव रसायन""",
+    "gravity": """भौतिक विज्ञान (Physics)
+├── यांत्रिकी (Mechanics)
+│   ├── चिरसम्मत यांत्रिकी
+│   │   ├── *गुरुत्वाकर्षण* (Gravity)
+│   │   │   ├── न्यूटन के नियम
+│   │   │   └── कक्षीय यांत्रिकी
+│   │   └── गतिज ऊर्जा
+│   └── सामान्य सापेक्षता
+└── खगोल भौतिकी""",
+    "atom": """रसायन विज्ञान (Chemistry)
+├── परमाणु सिद्धांत
+│   ├── उप-परमाणु कण
+│   │   ├── *परमाणु* (Atom)
+│   │   │   ├── नाभिक (Nucleus)
+│   │   │   └── इलेक्ट्रॉन क्लाउड
+│   │   └── क्वांटम यांत्रिकी
+│   └── आणविक संरचना
+└── परमाणु भौतिकी"""
+}
+
 def generate_concept_tree(term: str, language: str = "en") -> str:
     """
     Generate a concept hierarchy tree for a term.
@@ -503,9 +612,9 @@ def generate_concept_tree(term: str, language: str = "en") -> str:
         "top_p": 1.0
     }
 
-    for attempt in range(3):
+    for attempt in range(2):
         try:
-            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=50)
+            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=35)
             
             if response.status_code == 200:
                 result = response.json()
@@ -514,17 +623,40 @@ def generate_concept_tree(term: str, language: str = "en") -> str:
                     content = content.replace("```", "").strip()
                     return content
             elif response.status_code == 429:
-                if attempt == 2: return "AI is very busy right now (Rate Limit). Please wait 10 seconds and try again."
+                if attempt == 1: return "AI is busy. Please try again in 10 seconds."
                 import time
                 time.sleep(2)
                 continue
             elif response.status_code == 503:
-                if attempt == 2: return "AI model is still loading. Please try again in a few seconds."
+                if attempt == 1: return "AI model is still loading. Please try again soon."
                 import time
                 time.sleep(3)
                 continue
+            else:
+                if attempt == 1:
+                    logger.error(f"Tree API Error {response.status_code}: {response.text}")
+                    return f"AI Service error (Status {response.status_code})."
+                import time
+                time.sleep(1)
+                continue
+
+        except requests.exceptions.Timeout:
+            if attempt == 1: return "AI service taking too long. Please try again later."
+            import time
+            time.sleep(1)
         except Exception as e:
-            if attempt == 2: logger.error(f"Tree Error: {e}")
+            if attempt == 1: 
+                logger.error(f"Tree Error: {e}")
+                return "An internal error occurred."
+    
+    # If AI fails, use static fallback if available
+    term_key = term.lower().strip()
+    if language == "hi":
+        if term_key in STATIC_TREES_HI:
+            return STATIC_TREES_HI[term_key]
+    else:
+        if term_key in STATIC_TREES:
+            return STATIC_TREES[term_key]
     
     return f"Unable to generate tree for {term} at this moment. Please try again." if language == "en" else f"{term} के लिए वृक्ष नहीं बनाया जा सका। कृपया पुनः प्रयास करें।"
 

@@ -19,7 +19,7 @@ FALLBACK_MODELS = [
     "mistralai/Mistral-7B-Instruct-v0.3",
     "google/gemma-2-9b-it"
 ]
-APP_VERSION = "1.0.4-Smart-Fallback"
+APP_VERSION = "1.0.6-Genetics-Fallback"
 
 # Fast Static Explanations for common terms (instant load)
 STATIC_EXPLANATIONS = {
@@ -55,7 +55,18 @@ Disadvantage:
 Individual atoms are so tiny that they can't be seen with normal microscopes.
 
 Related Terms:
-Proton, Neutron, Electron"""
+Proton, Neutron, Electron""",
+    "genetics": """Definition:
+Genetics is the study of how traits like eye color or height are passed from parents to children through DNA.
+
+Advantage:
+It helps us understand why we look like our family and how to treat certain health conditions.
+
+Disadvantage:
+It can be very complex to study because humans have thousands of different genes.
+
+Related Terms:
+DNA, Genes, Inheritance"""
 }
 
 if not HF_API_TOKEN:
@@ -400,7 +411,7 @@ def generate_quiz(term: str, language: str = "en", explanation: str = "") -> str
         user_prompt = PROMPT_TEMPLATE_QUIZ.format(term=term, explanation=explanation)
 
     payload = {
-        "model": HF_MODEL,
+        "model": PRIMARY_MODEL,
         "messages": [
             {"role": "user", "content": user_prompt}
         ],
@@ -573,7 +584,16 @@ STATIC_TREES = {
 │   │   │   └── Genetic Drift
 │   │   └── Speciation
 │   └── Paleontology
-└── Genetics"""
+└── Genetics""",
+    "genetics": """Biology
+├── Genetics
+│   ├── Molecular Genetics
+│   │   ├── *Genetics*
+│   │   │   ├── DNA Structure
+│   │   │   └── Gene Expression
+│   │   └── Genomics
+│   └── Heredity
+└── Evolutionary Biology"""
 }
 
 # Static fallback trees for common terms in Hindi
@@ -604,7 +624,16 @@ STATIC_TREES_HI = {
 │   │   │   └── इलेक्ट्रॉन क्लाउड
 │   │   └── क्वांटम यांत्रिकी
 │   └── आणविक संरचना
-└── परमाणु भौतिकी"""
+└── परमाणु भौतिकी""",
+    "genetics": """जीव विज्ञान (Biology)
+├── आनुवंशिकी (Genetics)
+│   ├── आणविक आनुवंशिकी
+│   │   ├── *आनुवंशिकी* (Genetics)
+│   │   │   ├── डीएनऐ संरचना
+│   │   │   └── जीन अभिव्यक्ति
+│   │   └── जीनोमिक्स
+│   └── आनुवंशिकता
+└── विकासात्मक जीवविज्ञान"""
 }
 
 def generate_concept_tree(term: str, language: str = "en") -> str:
@@ -625,7 +654,7 @@ def generate_concept_tree(term: str, language: str = "en") -> str:
         user_prompt = PROMPT_TEMPLATE_TREE.format(term=term)
 
     payload = {
-        "model": HF_MODEL,
+        "model": PRIMARY_MODEL,
         "messages": [
             {"role": "user", "content": user_prompt}
         ],

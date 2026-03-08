@@ -344,11 +344,11 @@ def generate_explanation(term: str, level: str = "beginner", language: str = "en
 
             elif response.status_code == 402:
                 logger.error("AI API Quota reached (Status 402).")
-                return "Error: AI Free Quota reached. Please try again tomorrow or switch to a lighter model."
+                return "AI is currently busy. Please try again after 10-20 seconds."
             
             elif response.status_code == 429:
                 logger.warning("AI API Rate Limit reached (Status 429).")
-                return "Error: Too many people using the AI right now. Please wait 10 seconds and try again."
+                return "AI is currently busy. Please try again after 10-20 seconds."
 
             else:
                 logger.error(f"API Error {response.status_code}: {response.text}")
@@ -366,6 +366,25 @@ def generate_explanation(term: str, level: str = "beginner", language: str = "en
 
 import json
 import re
+
+# Static fallback quizzes for common terms
+STATIC_QUIZZES = {
+    "photosynthesis": [
+        {"question": "What is the primary source of energy for photosynthesis?", "options": ["Water", "Soil", "Sunlight", "Oxygen"], "correct_index": 2},
+        {"question": "Which gas do plants absorb from the atmosphere for photosynthesis?", "options": ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], "correct_index": 1},
+        {"question": "What is the green pigment in plants that absorbs light?", "options": ["Hemoglobin", "Chlorophyll", "Melanin", "Carotene"], "correct_index": 1}
+    ],
+    "gravity": [
+        {"question": "Who is famous for the law of universal gravitation?", "options": ["Einstein", "Newton", "Tesla", "Galileo"], "correct_index": 1},
+        {"question": "Gravity is a force that ____ objects toward each other.", "options": ["Pushes", "Rotates", "Pulls", "Repels"], "correct_index": 2},
+        {"question": "What happens to gravity as the distance between two objects increases?", "options": ["Increases", "Decreases", "Stays the same", "Disappears"], "correct_index": 1}
+    ],
+    "atom": [
+        {"question": "What is the center of an atom called?", "options": ["Proton", "Neutron", "Nucleus", "Electron"], "correct_index": 2},
+        {"question": "Which particle in an atom has a negative charge?", "options": ["Proton", "Neutron", "Electron", "Photon"], "correct_index": 2},
+        {"question": "Which particles are found inside the nucleus?", "options": ["Electrons and Protons", "Protons and Neutrons", "Electrons and Neutrons", "Only Electrons"], "correct_index": 1}
+    ]
+}
 
 def generate_quiz(term: str, language: str = "en", explanation: str = "") -> str:
     """
@@ -428,11 +447,16 @@ def generate_quiz(term: str, language: str = "en", explanation: str = "") -> str
         except Exception as e:
             if attempt == 2: logger.error(f"Quiz Error: {e}")
     
-    # Fallback Quiz
+    # If AI fails, try specific static fallback first
+    term_key = term.lower().strip()
+    if term_key in STATIC_QUIZZES and language == "en":
+        return json.dumps(STATIC_QUIZZES[term_key])
+    
+    # Generic Fallback Quiz
     fallback = [
-        {"question": f"Is {term} a scientific concept?", "options": ["Yes", "No", "Maybe", "Don't know"], "correct_index": 0},
-        {"question": f"The term '{term}' is used in science.", "options": ["True", "False", "Partially", "None"], "correct_index": 0},
-        {"question": f"Should we study {term}?", "options": ["Yes", "No", "It's optional", "None"], "correct_index": 0}
+        {"question": f"What is the main focus of studying {term}?", "options": ["Understanding its basic principles", "Ignoring its effects", "Testing unrelated theories", "None of the above"], "correct_index": 0},
+        {"question": f"The term '{term}' is most commonly found in which field?", "options": ["Literature", "Science", "History", "Sports"], "correct_index": 1},
+        {"question": f"Studying {term} helps us better understand:", "options": ["The past", "How the world works", "Fictional stories", "Ancient languages"], "correct_index": 1}
     ]
     return json.dumps(fallback)
     

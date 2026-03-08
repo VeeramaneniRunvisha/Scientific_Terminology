@@ -19,7 +19,7 @@ FALLBACK_MODELS = [
     "mistralai/Mistral-7B-Instruct-v0.3",
     "google/gemma-2-9b-it"
 ]
-APP_VERSION = "1.1.1-All-Rotation-Live"
+APP_VERSION = "1.1.3-Static-Stability-Patch"
 
 # Fast Static Explanations with Levels (instant load)
 STATIC_EXPLANATIONS = {
@@ -302,187 +302,83 @@ In medical contexts, osmotic imbalances can lead to conditions like cerebral ede
 
 Related Terms:
 Water Potential, Turgor, Isotonic"""
+    },
+    "combustion": {
+        "beginner": """Definition:
+Combustion is when something burns by reacting with oxygen and creating heat and light.
+
+Advantage:
+It provides energy for cooking food and heating homes.
+
+Disadvantage:
+It can release harmful smoke and gases into the air.
+
+Related Terms:
+Fire, Burning, Heat""",
+        "intermediate": """Definition:
+Combustion is a chemical reaction between a fuel and an oxidant (usually oxygen) that produces heat and light.
+
+Advantage:
+Controlled combustion drives car engines and power plants that generate electricity.
+
+Disadvantage:
+Incomplete combustion can produce carbon monoxide, which is a poisonous, colorless gas.
+
+Related Terms:
+Oxidation, Fuel, Exothermic""",
+        "advanced": """Definition:
+Combustion is a high-temperature exothermic redox chemical reaction between a fuel and an oxidant, often accompanied by flame and smoke.
+
+Advantage:
+The high energy density of combustion reactions is the primary driver of internal combustion engines and thermal power generation.
+
+Disadvantage:
+Atmospheric combustion of fossil fuels is the leading contributor to greenhouse gas emissions and environmental air pollution.
+
+Related Terms:
+Stoichiometry, Redox, Thermodynamics"""
+    },
+    "global warming": {
+        "beginner": """Definition:
+Global warming is when the Earth's air and oceans get warmer over time.
+
+Advantage:
+None. Global warming is harmful to life on Earth.
+
+Disadvantage:
+It melts ice at the poles, raises sea levels, and causes extreme weather.
+
+Related Terms:
+Heat, Earth, Weather""",
+        "intermediate": """Definition:
+Global warming is the long-term heating of Earth's climate system observed since the pre-industrial period due to human activities.
+
+Advantage:
+There are no significant advantages; it is a major environmental threat.
+
+Disadvantage:
+It leads to frequent natural disasters, shifts in ecosystems, and threats to food security.
+
+Related Terms:
+Greenhouse Effect, Climate Change, CO2""",
+        "advanced": """Definition:
+Global warming refers to the century-scale rise in the average temperature of the Earth's climate system and its related effects, caused by greenhouse gas emissions.
+
+Advantage:
+None. It represents a significant systemic risk to the biosphere and human civilization.
+
+Disadvantage:
+It results in ocean acidification, glacial retreat, and a fundamental shift in biodiversity and precipitation patterns.
+
+Related Terms:
+Radiative Forcing, Anthropogenic, IPCC"""
     }
 }
 
 # Hindi Static Explanations with Levels
-STATIC_EXPLANATIONS_HI = {
-    "photosynthesis": {
-        "beginner": """परिभाषा:
-प्रकाश संश्लेषण वह तरीका है जिससे पौधे सूरज की रोशनी का उपयोग करके अपना खाना बनाते हैं।
+STATIC_EXPLANATIONS_HI = {}
 
-लाभ:
-यह हमारे सांस लेने के लिए ऑक्सीजन बनाता है और पौधों को बढ़ने में मदद करता है।
-
-हानि:
-यह सूरज की रोशनी के बिना या रात में नहीं हो सकता।
-
-संबंधित शब्द:
-पौधा, भोजन, ऊर्जा""",
-        "intermediate": """परिभाषा:
-प्रकाश संश्लेषण वह जैव-रासायनिक प्रक्रिया है जिसमें हरे पौधे प्रकाश ऊर्जा को रासायनिक ऊर्जा (ग्लूकोज) में बदलते हैं।
-
-लाभ:
-यह पृथ्वी पर ऑक्सीजन का मुख्य स्रोत है और लगभग सभी जैविक प्रणालियों के लिए ऊर्जा प्रदान करता है।
-
-हानि:
-यह प्रक्रिया पानी और प्रकाश की तीव्रता जैसे पर्यावरणीय कारकों पर अत्यधिक निर्भर करती है।
-
-संबंधित शब्द:
-क्लोरोफिल, ग्लूकोज, कार्बन डाइऑक्साइड""",
-        "advanced": """परिभाषा:
-प्रकाश संश्लेषण एक जटिल शारीरिक मार्ग है जिसके द्वारा स्वपोषी सौर विकिरण को कार्बनिक अणुओं में संग्रहीत रासायनिक ऊर्जा में परिवर्तित करते हैं।
-
-लाभ:
-यह वैश्विक कार्बन चक्र को नियंत्रित करता है और केल्विन चक्र एवं प्रकाश-निर्भर प्रतिक्रियाओं के माध्यम से वायुमंडलीय ऑक्सीजन को बनाए रखता है।
-
-हानि:
-सी3 (C3) पौधों में, प्रकाश-श्वसन (Photorespiration) के कारण इसकी दक्षता सीमित हो जाती है, जो उत्पादकता को कम कर देता है।
-
-संबंधित शब्द:
-RuBisCO, थायलाकोइड, फोटोफॉस्फोरिलीकरण"""
-    },
-    "gravity": {
-        "beginner": """परिभाषा:
-गुरुत्वाकर्षण एक अदृश्य बल है जो हर चीज को जमीन की ओर खींचता है।
-
-लाभ:
-यह हमें जमीन पर टिकाए रखता है ताकि हम अंतरिक्ष में उड़ न जाएं।
-
-हानि:
-यह भारी चीजों को उठाना या बहुत ऊंचा कूदना कठिन बना देता है।
-
-संबंधित शब्द:
-खिंचाव, जमीन, पृथ्वी""",
-        "intermediate": """परिभाषा:
-गुरुत्वाकर्षण प्रकृति का एक मौलिक बल है जो द्रव्यमान वाली वस्तुओं को एक-दूसरे की ओर आकर्षित करता है।
-
-लाभ:
-यह ग्रहों की गति को नियंत्रित करता है और वायुमंडल को पृथ्वी से जोड़कर रखता है।
-
-हानि:
-पृथ्वी के गुरुत्वाकर्षण खिंचाव से बचने के लिए अत्यधिक ऊर्जा और विशेष रॉकेट प्रणालियों की आवश्यकता होती है।
-
-संबंधित शब्द:
-द्रव्यमान, आकर्षण, कक्षा""",
-        "advanced": """परिभाषा:
-गुरुत्वाकर्षण एक मौलिक अंतःक्रिया है जो द्रव्यमान या ऊर्जा वाली सभी चीजों के बीच आकर्षण का कारण बनती है, जिसे सामान्य सापेक्षता में स्पेसटाइम वक्रता के रूप में वर्णित किया गया है।
-
-लाभ:
-यह ग्रहों की कक्षाओं के लिए आवश्यक अभिकेंद्री बल प्रदान करता है और ब्रह्मांडीय धूल से सितारों और आकाशगंगाओं के निर्माण को प्रेरित करता है।
-
-हानि:
-ब्रह्मांडीय पैमानों पर, यह विशाल सितारों में गुरुत्वाकर्षण पतन का कारण बनता है, जिससे ब्लैक होल जैसी स्थितियां पैदा हो सकती हैं।
-
-संबंधित शब्द:
-सापेक्षता, स्पेसटाइम, सिंगुलैरिटी"""
-    },
-    "atom": {
-        "beginner": """परिभाषा:
-परमाणु ब्रह्मांड की हर चीज का सबसे छोटा हिस्सा है।
-
-लाभ:
-दुनिया की हर चीज इन्हीं छोटे-छोटे टुकड़ों से बनी है।
-
-हानि:
-ये इतने छोटे होते हैं कि इन्हें किसी भी शीशे या माइक्रोस्कोप से नहीं देखा जा सकता।
-
-संबंधित शब्द:
-छोटा, हिस्सा, विज्ञान""",
-        "intermediate": """परिभाषा:
-परमाणु किसी रासायनिक तत्व की मूल इकाई है, जिसमें एक नाभिक (Nucleus) और उसके चारों ओर घूमने वाले इलेक्ट्रॉन होते हैं।
-
-लाभ:
-परमाणु मिलकर अणु (Molecules) बनाते हैं, जिससे हमारे आसपास के सभी पदार्थ बनते हैं।
-
-हानि:
-परमाणु संरचना में बदलाव से हानिकारक विकिरण (Radiation) पैदा हो सकता है।
-
-संबंधित शब्द:
-प्रोटॉन, इलेक्ट्रॉन, नाभिक""",
-        "advanced": """परिभाषा:
-परमाणु पदार्थ का सबसे छोटा घटक है जिसमें एक रासायनिक तत्व के गुण होते हैं, और यह नाभिक में प्रोटॉन की संख्या द्वारा परिभाषित होता है।
-
-लाभ:
-परमाणु संरचना सहसंयोजक और आयनिक बंधों के निर्माण की अनुमति देती है, जो रासायनिक प्रतिक्रियाओं के पीछे मुख्य बल हैं।
-
-हानि:
-परमाणु का व्यवहार क्वांटम यांत्रिकी (Quantum Mechanics) का पालन करता है, जिससे उनके व्यवहार की भविष्यवाणी करना अत्यंत कठिन हो जाता है।
-
-संबंधित शब्द:
-समस्थानिक (Isotope), क्वांटम भौतिकी, संयोजकता"""
-    },
-    "condensation": {
-        "beginner": """परिभाषा:
-संघनन तब होता है जब भाप ठंडी होकर वापस पानी की बूंदों में बदल जाती है।
-
-लाभ:
-यह बारिश और बादल बनाता है जिससे धरती को पानी मिलता है।
-
-हानि:
-यह घर के अंदर खिड़कियों और दीवारों को गीला और खराब कर सकता है।
-
-संबंधित शब्द:
-गीला, भाप, बारिश""",
-        "intermediate": """परिभाषा:
-संघनन पदार्थ की भौतिक अवस्था का गैस से तरल अवस्था में परिवर्तन है।
-
-लाभ:
-यह जल चक्र का एक अनिवार्य हिस्सा है और आसवन (Distillation) जैसी औद्योगिक प्रक्रियाओं में उपयोग किया जाता है।
-
-हानि:
-उच्च आर्द्रता वाले घरों में यह दीवारों पर फफूंद (Mold) का कारण बन सकता है।
-
-संबंधित शब्द:
-वाष्प, ओसांक (Dew Point), नमी""",
-        "advanced": """परिभाषा:
-संघनन एक चरण संक्रमण (Phase transition) है जिसमें कोई पदार्थ गैसीय अवस्था से तरल अवस्था में गुजरता है, जिससे गुप्त ऊष्मा (Latent heat) मुक्त होती है।
-
-लाभ:
-वायुमंडलीय संघनन वैश्विक ऊष्मा परिवहन और तूफान प्रणालियों के विकास के लिए महत्वपूर्ण है।
-
-हानि:
-औद्योगिक हीट एक्सचेंजर्स में, गैर-घनीभूत गैसें दक्षता को 40% तक कम कर सकती हैं।
-
-संबंधित शब्द:
-गुप्त ऊष्मा, न्यूक्लिएशन, सतही तनाव"""
-    },
-    "evaporation": {
-        "beginner": """परिभाषा:
-वाष्पीकरण तब होता है जब पानी गर्म होकर भाप बन जाता है और आसमान की ओर चला जाता है।
-
-लाभ:
-यह सूरज की रोशनी में आपके गीले कपड़ों को सुखाने में मदद करता है।
-
-हानि:
-बहुत ज्यादा गर्मी में यह तालाबों और गड्ढों का पानी सुखा सकता है।
-
-संबंधित शब्द:
-सूरज, भाप, सूखा""",
-        "intermediate": """परिभाषा:
-वाष्पीकरण वह प्रक्रिया है जिसके द्वारा तरल पानी जल वाष्प में परिवर्तित होकर वातावरण में प्रवेश करता है।
-
-लाभ:
-यह गंदगी को पीछे छोड़कर पानी को शुद्ध करने का एक प्राकृतिक तरीका है।
-
-हानि:
-सूखे क्षेत्रों में उच्च वाष्पीकरण से मिट्टी में नमक की मात्रा बढ़ सकती है, जिससे खेती कठिन हो जाती।
-
-संबंधित शब्द:
-वाष्प दाब, गर्मी, वाष्पीकरण""",
-        "advanced": """परिभाषा:
-वाष्पीकरण एक प्रकार का वाष्पीकरण है जो तरल की सतह पर होता है जब वह अपने क्वथनांक (Boiling point) तक पहुँचने से पहले गैस में बदल जाता है।
-
-लाभ:
-वाष्पीकरणीय शीतलन (Evaporative cooling) पसीने के माध्यम से शरीर के तापमान को नियंत्रित करने के लिए महत्वपूर्ण है।
-
-हानि:
-वाष्पीकरण की दर आसपास की गैस में वाष्प के आंशिक दबाव (Partial pressure) और उपलब्ध सतह क्षेत्र द्वारा सीमित होती है।
-
-संबंधित शब्द:
-ऊष्मप्रवैगिकी, आंशिक दबाव, एन्ट्रॉपी"""
-    }
-}
+STATIC_TREES_HI = {}
 
 if not HF_API_TOKEN:
     logger.warning("HF_API_TOKEN is not set in environment variables.")
@@ -1050,7 +946,25 @@ STATIC_TREES = {
 │   │   │   └── Anaerobic Respiration
 │   │   └── ATP Production
 │   └── Physiology
-└── Biochemistry"""
+└── Biochemistry""",
+    "combustion": """Chemistry/Physics
+├── Chemical Reactions
+│   ├── Oxidation
+│   │   ├── *Combustion*
+│   │   │   ├── Exothermic Process
+│   │   │   └── Fuel/Oxidant
+│   │   └── Redox Reactions
+│   └── Thermodynamics
+└── Energy Production""",
+    "global warming": """Environmental Science
+├── Climate Change
+│   ├── Atmosphere
+│   │   ├── *Global Warming*
+│   │   │   ├── Greenhouse Effect
+│   │   │   └── Carbon Emissions
+│   │   └── Meteorology
+│   └── Ecology
+└── Sustainability"""
 }
 
 # Static fallback trees for common terms in Hindi
@@ -1109,6 +1023,16 @@ def generate_concept_tree(term: str, language: str = "en") -> str:
         user_prompt = PROMPT_TEMPLATE_TREE_HI.format(term=term)
     else:
         user_prompt = PROMPT_TEMPLATE_TREE.format(term=term)
+
+    payload = {
+        "model": PRIMARY_MODEL,
+        "messages": [
+            {"role": "user", "content": user_prompt}
+        ],
+        "max_tokens": 400,
+        "temperature": 0.0,
+        "top_p": 1.0
+    }
 
     models_to_try = [PRIMARY_MODEL] + FALLBACK_MODELS
     

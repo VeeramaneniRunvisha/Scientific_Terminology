@@ -19,7 +19,7 @@ FALLBACK_MODELS = [
     "mistralai/Mistral-7B-Instruct-v0.3",
     "google/gemma-2-9b-it"
 ]
-APP_VERSION = "1.1.0-Full-Multi-Level-Fallbacks"
+APP_VERSION = "1.1.1-All-Rotation-Live"
 
 # Fast Static Explanations with Levels (instant load)
 STATIC_EXPLANATIONS = {
@@ -845,56 +845,61 @@ def generate_quiz(term: str, language: str = "en", explanation: str = "") -> str
         "top_p": 0.95
     }
 
-    for attempt in range(2):
-        try:
-            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=40)
-            
-            if response.status_code == 200:
-                result = response.json()
-                if 'choices' in result and len(result['choices']) > 0:
-                    content = result['choices'][0]['message']['content'].strip()
-                    # Clean up markdown if any
-                    content = content.replace("```json", "").replace("```", "").strip()
-                    # Find first [ and last ]
-                    start = content.find("[")
-                    end = content.rfind("]")
-                    if start != -1 and end != -1:
-                        content = content[start:end+1]
-                    try:
-                        json.loads(content)
-                        return content
-                    except: logger.error(f"Invalid Quiz JSON: {content}")
-                else: logger.error(f"Format error: {result}")
-            
-            elif response.status_code == 429 or response.status_code == 402:
-                if attempt == 1: break # Try fallback
-                import time
-                time.sleep(1)
-                continue
-
-            elif response.status_code == 503:
-                if attempt == 1: break # Try fallback
-                import time
-                time.sleep(2)
-                continue
-
-        except Exception as e:
-            if attempt == 1: logger.error(f"Quiz Error: {e}")
+    models_to_try = [PRIMARY_MODEL] + FALLBACK_MODELS
     
-    # If AI fails, try specific static fallback first
+    for current_model in models_to_try:
+        payload["model"] = current_model
+        for attempt in range(2):
+            try:
+                response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=45)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if 'choices' in result and len(result['choices']) > 0:
+                        content = result['choices'][0]['message']['content'].strip()
+                        content = content.replace("```json", "").replace("```", "").strip()
+                        start = content.find("[")
+                        end = content.rfind("]")
+                        if start != -1 and end != -1:
+                            content = content[start:end+1]
+                        try:
+                            json.loads(content)
+                            return content
+                        except: logger.error(f"Invalid Quiz JSON: {content}")
+                    continue
+
+                elif response.status_code in [402, 429]:
+                    logger.warning(f"Quiz: Model {current_model} busy. Trying next...")
+                    break 
+
+                elif response.status_code == 503:
+                    if attempt == 0:
+                        import time
+                        time.sleep(2)
+                        continue
+                    break
+
+                else:
+                    if attempt == 1: break
+                    continue
+
+            except Exception as e:
+                logger.error(f"Quiz Error with {current_model}: {e}")
+                if attempt == 1: break
+                continue
+
+    # Final Fallback if all AI fail
     term_key = term.lower().strip()
     if term_key in STATIC_QUIZZES and language == "en":
         return json.dumps(STATIC_QUIZZES[term_key])
     
-    # Generic Fallback Quiz
-    fallback = [
-        {"question": f"What is the main focus of studying {term}?", "options": ["Understanding its basic principles", "Ignoring its effects", "Testing unrelated theories", "None of the above"], "correct_index": 0},
-        {"question": f"The term '{term}' is most commonly found in which field?", "options": ["Literature", "Science", "History", "Sports"], "correct_index": 1},
-        {"question": f"Studying {term} helps us better understand:", "options": ["The past", "How the world works", "Fictional stories", "Ancient languages"], "correct_index": 1}
+    # Generic Relevant Quiz Fallback
+    generic_quiz = [
+        {"question": f"Which of the following describes '{term}'?", "options": ["Option A", "Option B", "Option C", "Option D"], "correct_index": 0},
+        {"question": f"True or False: The concept of '{term}' is fundamental to science.", "options": ["True", "False"], "correct_index": 0}
     ]
-    return json.dumps(fallback)
+    return json.dumps(generic_quiz)
     
-    return json.dumps(fallback_quiz)
 
 # Concept Tree Prompt Templates
 PROMPT_TEMPLATE_TREE = """You are an educational assistant.
@@ -1105,53 +1110,42 @@ def generate_concept_tree(term: str, language: str = "en") -> str:
     else:
         user_prompt = PROMPT_TEMPLATE_TREE.format(term=term)
 
-    payload = {
-        "model": PRIMARY_MODEL,
-        "messages": [
-            {"role": "user", "content": user_prompt}
-        ],
-        "max_tokens": 400,
-        "temperature": 0.0,  # Stable and fast
-        "top_p": 1.0
-    }
-
-    for attempt in range(2):
-        try:
-            response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=35)
-            
-            if response.status_code == 200:
-                result = response.json()
-                if 'choices' in result and len(result['choices']) > 0:
-                    content = result['choices'][0]['message']['content']
-                    content = content.replace("```", "").strip()
-                    return content
-            elif response.status_code == 429:
-                if attempt == 1: return "AI is busy. Please try again in 10 seconds."
-                import time
-                time.sleep(2)
-                continue
-            elif response.status_code == 503:
-                if attempt == 1: return "AI model is still loading. Please try again soon."
-                import time
-                time.sleep(3)
-                continue
-            else:
-                if attempt == 1:
-                    logger.error(f"Tree API Error {response.status_code}: {response.text}")
-                    return f"AI Service error (Status {response.status_code})."
-                import time
-                time.sleep(1)
-                continue
-
-        except requests.exceptions.Timeout:
-            if attempt == 1: return "AI service taking too long. Please try again later."
-            import time
-            time.sleep(1)
-        except Exception as e:
-            if attempt == 1: 
-                logger.error(f"Tree Error: {e}")
-                return "An internal error occurred."
+    models_to_try = [PRIMARY_MODEL] + FALLBACK_MODELS
     
+    for current_model in models_to_try:
+        payload["model"] = current_model
+        for attempt in range(2):
+            try:
+                response = requests.post(HF_API_URL, headers=headers, json=payload, timeout=35)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if 'choices' in result and len(result['choices']) > 0:
+                        content = result['choices'][0]['message']['content']
+                        content = content.replace("```", "").strip()
+                        return content
+                    continue
+
+                elif response.status_code in [402, 429]:
+                    logger.warning(f"Tree: Model {current_model} busy. Trying next...")
+                    break 
+
+                elif response.status_code == 503:
+                    if attempt == 0:
+                        import time
+                        time.sleep(3)
+                        continue
+                    break
+
+                else:
+                    if attempt == 1: break
+                    continue
+
+            except Exception as e:
+                logger.error(f"Tree Error with {current_model}: {e}")
+                if attempt == 1: break
+                continue
+
     # If AI fails, use static fallback if available
     term_key = term.lower().strip()
     if language == "hi":

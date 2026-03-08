@@ -13,60 +13,475 @@ logger = logging.getLogger(__name__)
 # Configuration
 HF_API_URL = "https://router.huggingface.co/v1/chat/completions"
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-PRIMARY_MODEL = os.getenv("HF_MODEL", "meta-llama/Llama-3.3-70B-Instruct")
+PRIMARY_MODEL = os.getenv("HF_MODEL", "Qwen/Qwen2.5-72B-Instruct")
 FALLBACK_MODELS = [
-    "Qwen/Qwen2.5-72B-Instruct",
+    "meta-llama/Llama-3.3-70B-Instruct",
     "mistralai/Mistral-7B-Instruct-v0.3",
     "google/gemma-2-9b-it"
 ]
-APP_VERSION = "1.0.6-Genetics-Fallback"
+APP_VERSION = "1.1.0-Full-Multi-Level-Fallbacks"
 
-# Fast Static Explanations for common terms (instant load)
+# Fast Static Explanations with Levels (instant load)
 STATIC_EXPLANATIONS = {
-    "photosynthesis": """Definition:
-Photosynthesis is how plants use sunlight to turn water and air into food.
+    "photosynthesis": {
+        "beginner": """Definition:
+Photosynthesis is how plants use sunlight to make their own food.
 
 Advantage:
-It creates oxygen, which is what humans and animals need to breathe.
+It helps plants grow and creates the oxygen we breathe.
 
 Disadvantage:
-It can't happen at night or in deep water where there's no sunlight.
+It cannot happen without sunlight or at night.
 
 Related Terms:
-Chlorophyll, Sunlight, Oxygen""",
-    "gravity": """Definition:
-Gravity is an invisible pull that keeps everything on the ground and planets orbiting the sun.
+Plant, Food, Sunlight""",
+        "intermediate": """Definition:
+Photosynthesis is a biochemical process where green plants convert light energy into chemical energy (glucose).
 
 Advantage:
-It prevents us and the atmosphere from floating away into space.
+It is the primary source of oxygen for all living beings and provides the energy base for most life.
 
 Disadvantage:
-It makes it hard to lift heavy things or fly without a lot of power.
+The process is highly dependent on environmental factors like water availability and specific temperature ranges.
 
 Related Terms:
-Force, Mass, Weight""",
-    "atom": """Definition:
+Chlorophyll, Glucose, Carbon Dioxide""",
+        "advanced": """Definition:
+Photosynthesis is a complex physiological pathway where photoautotrophs convert solar radiation into chemical potential energy stored in organic molecules.
+
+Advantage:
+It regulates global carbon cycles and maintain atmospheric oxygen levels through the light-dependent and Calvin cycle reactions.
+
+Disadvantage:
+In C3 plants, the efficiency is limited by photorespiration, where oxygen competes with carbon dioxide for the active site of RuBisCO.
+
+Related Terms:
+RuBisCO, Thylakoid, Photophosphorylation"""
+    },
+    "gravity": {
+        "beginner": """Definition:
+Gravity is an invisible pull that keeps everything on the ground.
+
+Advantage:
+It keeps our feet on the floor so we don't float away.
+
+Disadvantage:
+It makes it hard to jump very high or lift heavy things.
+
+Related Terms:
+Pull, Ground, Earth""",
+        "intermediate": """Definition:
+Gravity is a fundamental force of nature that attracts objects with mass toward each other.
+
+Advantage:
+It governs the motion of planets and keeps the atmosphere attached to Earth.
+
+Disadvantage:
+Escaping Earth's gravitational pull requires immense energy and specialized propulsion systems.
+
+Related Terms:
+Mass, Attraction, Orbit""",
+        "advanced": """Definition:
+Gravity is a fundamental interaction that causes mutual attraction between all things with mass or energy, described by General Relativity as spacetime curvature.
+
+Advantage:
+It provides the necessary centripetal force for planetary orbits and drives the formation of stars and galaxies from cosmic dust.
+
+Disadvantage:
+At cosmic scales, it causes gravitational collapse in massive stars, potentially leading to singularities like black holes.
+
+Related Terms:
+Spacetime, Relativity, Singularity"""
+    },
+    "atom": {
+        "beginner": """Definition:
 An atom is the smallest building block of everything in the universe.
 
 Advantage:
-Different types of atoms combine to create every material we see, like water or metal.
+Everything you see is made of these tiny blocks.
 
 Disadvantage:
-Individual atoms are so tiny that they can't be seen with normal microscopes.
+They are so small that you can't see them even with a microscope.
 
 Related Terms:
-Proton, Neutron, Electron""",
-    "genetics": """Definition:
-Genetics is the study of how traits like eye color or height are passed from parents to children through DNA.
+Tiny, Block, Science""",
+        "intermediate": """Definition:
+An atom is the basic unit of a chemical element, consisting of a nucleus and orbiting electrons.
 
 Advantage:
-It helps us understand why we look like our family and how to treat certain health conditions.
+Atoms combine to form molecules, creating the diverse matter in our universe.
 
 Disadvantage:
-It can be very complex to study because humans have thousands of different genes.
+Splitting or altering atoms can release hazardous radiation or immense energy.
 
 Related Terms:
-DNA, Genes, Inheritance"""
+Proton, Electron, Nucleus""",
+        "advanced": """Definition:
+An atom is the smallest constituent unit of ordinary matter that has the properties of a chemical element, defined by its atomic number of protons in the nucleus.
+
+Advantage:
+Atomic structure allows for the formation of covalent and ionic bonds, which are the fundamental forces behind chemical reactions and molecular biology.
+
+Disadvantage:
+The subatomic behavior of atoms follows quantum mechanics, leading to phenomena like electron-cloud probability and wave-particle duality which are difficult to predict.
+
+Related Terms:
+Isotope, Quantum Mechanics, Valency"""
+    },
+    "genetics": {
+        "beginner": """Definition:
+Genetics is the study of how traits are passed from parents to children.
+
+Advantage:
+It helps us understand why we look like our family.
+
+Disadvantage:
+Some genetic traits can cause diseases.
+
+Related Terms:
+DNA, Traits, Family""",
+        "intermediate": """Definition:
+Genetics is the scientific study of heredity and variation in living organisms.
+
+Advantage:
+It allows for the understanding and treatment of genetic disorders and the development of improved crops.
+
+Disadvantage:
+Ethical concerns arise with genetic engineering and privacy of genetic information.
+
+Related Terms:
+Gene, Chromosome, Heredity""",
+        "advanced": """Definition:
+Genetics is the branch of biology concerned with the study of genes, genetic variation, and heredity in organisms, encompassing molecular, Mendelian, and population genetics.
+
+Advantage:
+It provides insights into evolutionary processes, disease susceptibility, and personalized medicine through genomic sequencing and CRISPR technologies.
+
+Disadvantage:
+Complex genetic interactions and epigenetic modifications make predicting phenotypes from genotypes challenging, and genetic determinism can be a societal concern.
+
+Related Terms:
+Genome, Allele, Phenotype"""
+    },
+    "condensation": {
+        "beginner": """Definition:
+Condensation is when gas (like steam) cools down and turns back into water drops.
+
+Advantage:
+It creates rain and clouds which give water to the earth.
+
+Disadvantage:
+It can make windows foggy and walls wet if it happens inside.
+
+Related Terms:
+Wet, Steam, Rain""",
+        "intermediate": """Definition:
+Condensation is the change of the physical state of matter from gas phase into liquid phase.
+
+Advantage:
+It is an essential part of the water cycle and is used in industrial processes like distillation.
+
+Disadvantage:
+It can lead to mold growth and structural damage in buildings with poor insulation and high humidity.
+
+Related Terms:
+Vapor, Dew Point, Humidity""",
+        "advanced": """Definition:
+Condensation is a phase transition where a substance passes from the gaseous phase to the liquid phase, releasing latent heat of vaporization.
+
+Advantage:
+Atmospheric condensation is critical for global latent heat transport and the development of convective storm systems.
+
+Disadvantage:
+In industrial heat exchangers, dropwise condensation can be inhibited by non-condensable gases, reducing thermal efficiency.
+
+Related Terms:
+Latent Heat, Nucleation, Surface Tension"""
+    },
+    "evaporation": {
+        "beginner": """Definition:
+Evaporation is when water gets warm and turns into steam that goes up into the sky.
+
+Advantage:
+It dries your clothes when they are hanging outside in the sun.
+
+Disadvantage:
+It can dry up lakes and puddles during a hot day.
+
+Related Terms:
+Sun, Steam, Dry""",
+        "intermediate": """Definition:
+Evaporation is the process by which liquid water is converted into water vapor and enters the atmosphere.
+
+Advantage:
+It leaves behind pollutants and minerals, providing a natural way to purify water as it enters the clouds.
+
+Disadvantage:
+High rates of evaporation in arid regions can lead to soil salinization, making farming difficult.
+
+Related Terms:
+Vapor pressure, Heat, Arid""",
+        "advanced": """Definition:
+Evaporation is a type of vaporization that occurs on the surface of a liquid as it changes into the gas phase before reaching its boiling point.
+
+Advantage:
+Evaporative cooling is a key thermodynamic process used in both biological thermoregulation (sweating) and industrial cooling towers.
+
+Disadvantage:
+The rate of evaporation is limited by the partial pressure of the vapor in the surrounding gas and the available surface area.
+
+Related Terms:
+Thermodynamics, Partial Pressure, Entrophy"""
+    },
+    "respiration": {
+        "beginner": """Definition:
+Respiration is how living things breathe in air and use it to get energy from food.
+
+Advantage:
+It gives our bodies the energy to move, think, and grow.
+
+Disadvantage:
+If we can't breathe, our bodies can't get energy and will stop working.
+
+Related Terms:
+Breathe, Energy, Food""",
+        "intermediate": """Definition:
+Respiration is the biochemical process in which cells obtain energy by breaking down glucose and other organic molecules.
+
+Advantage:
+It provides ATP, the main energy currency of the cell, essential for all metabolic activities.
+
+Disadvantage:
+Anaerobic respiration is less efficient and produces byproducts like lactic acid, which can cause muscle fatigue.
+
+Related Terms:
+ATP, Glucose, Oxygen""",
+        "advanced": """Definition:
+Cellular respiration is a set of metabolic reactions and processes that take place in the cells of organisms to convert biochemical energy from nutrients into adenosine triphosphate (ATP), and then release waste products.
+
+Advantage:
+Aerobic respiration, particularly oxidative phosphorylation, is highly efficient, yielding a large amount of ATP necessary for complex multicellular life.
+
+Disadvantage:
+The process generates reactive oxygen species (ROS) as byproducts, which can cause oxidative stress and cellular damage if not properly managed by antioxidant systems.
+
+Related Terms:
+Glycolysis, Krebs Cycle, Electron Transport Chain"""
+    },
+    "osmosis": {
+        "beginner": """Definition:
+Osmosis is when water moves through a special skin from where there's a lot of water to where there's less.
+
+Advantage:
+It helps plants get water from the soil and keeps our cells healthy.
+
+Disadvantage:
+Too much or too little water can make cells swell or shrink too much.
+
+Related Terms:
+Water, Skin, Move""",
+        "intermediate": """Definition:
+Osmosis is the net movement of solvent molecules through a selectively permeable membrane into a region of higher solute concentration, aiming to equalize solute concentrations on the two sides.
+
+Advantage:
+It is crucial for maintaining turgor pressure in plant cells and regulating water balance in animal cells.
+
+Disadvantage:
+Dysregulation of osmosis can lead to dehydration or overhydration of cells, potentially causing cellular damage or death.
+
+Related Terms:
+Solute, Solvent, Membrane""",
+        "advanced": """Definition:
+Osmosis is a specific type of passive diffusion involving the spontaneous net movement of solvent molecules through a semipermeable membrane from a region of high solvent potential to a region of lower solvent potential.
+
+Advantage:
+It is fundamental to physiological processes such as kidney function, nutrient absorption in the gut, and the transport of water in vascular plants via root pressure.
+
+Disadvantage:
+In medical contexts, osmotic imbalances can lead to conditions like cerebral edema or hyponatremia, requiring careful management of fluid and electrolyte levels.
+
+Related Terms:
+Water Potential, Turgor, Isotonic"""
+    }
+}
+
+# Hindi Static Explanations with Levels
+STATIC_EXPLANATIONS_HI = {
+    "photosynthesis": {
+        "beginner": """परिभाषा:
+प्रकाश संश्लेषण वह तरीका है जिससे पौधे सूरज की रोशनी का उपयोग करके अपना खाना बनाते हैं।
+
+लाभ:
+यह हमारे सांस लेने के लिए ऑक्सीजन बनाता है और पौधों को बढ़ने में मदद करता है।
+
+हानि:
+यह सूरज की रोशनी के बिना या रात में नहीं हो सकता।
+
+संबंधित शब्द:
+पौधा, भोजन, ऊर्जा""",
+        "intermediate": """परिभाषा:
+प्रकाश संश्लेषण वह जैव-रासायनिक प्रक्रिया है जिसमें हरे पौधे प्रकाश ऊर्जा को रासायनिक ऊर्जा (ग्लूकोज) में बदलते हैं।
+
+लाभ:
+यह पृथ्वी पर ऑक्सीजन का मुख्य स्रोत है और लगभग सभी जैविक प्रणालियों के लिए ऊर्जा प्रदान करता है।
+
+हानि:
+यह प्रक्रिया पानी और प्रकाश की तीव्रता जैसे पर्यावरणीय कारकों पर अत्यधिक निर्भर करती है।
+
+संबंधित शब्द:
+क्लोरोफिल, ग्लूकोज, कार्बन डाइऑक्साइड""",
+        "advanced": """परिभाषा:
+प्रकाश संश्लेषण एक जटिल शारीरिक मार्ग है जिसके द्वारा स्वपोषी सौर विकिरण को कार्बनिक अणुओं में संग्रहीत रासायनिक ऊर्जा में परिवर्तित करते हैं।
+
+लाभ:
+यह वैश्विक कार्बन चक्र को नियंत्रित करता है और केल्विन चक्र एवं प्रकाश-निर्भर प्रतिक्रियाओं के माध्यम से वायुमंडलीय ऑक्सीजन को बनाए रखता है।
+
+हानि:
+सी3 (C3) पौधों में, प्रकाश-श्वसन (Photorespiration) के कारण इसकी दक्षता सीमित हो जाती है, जो उत्पादकता को कम कर देता है।
+
+संबंधित शब्द:
+RuBisCO, थायलाकोइड, फोटोफॉस्फोरिलीकरण"""
+    },
+    "gravity": {
+        "beginner": """परिभाषा:
+गुरुत्वाकर्षण एक अदृश्य बल है जो हर चीज को जमीन की ओर खींचता है।
+
+लाभ:
+यह हमें जमीन पर टिकाए रखता है ताकि हम अंतरिक्ष में उड़ न जाएं।
+
+हानि:
+यह भारी चीजों को उठाना या बहुत ऊंचा कूदना कठिन बना देता है।
+
+संबंधित शब्द:
+खिंचाव, जमीन, पृथ्वी""",
+        "intermediate": """परिभाषा:
+गुरुत्वाकर्षण प्रकृति का एक मौलिक बल है जो द्रव्यमान वाली वस्तुओं को एक-दूसरे की ओर आकर्षित करता है।
+
+लाभ:
+यह ग्रहों की गति को नियंत्रित करता है और वायुमंडल को पृथ्वी से जोड़कर रखता है।
+
+हानि:
+पृथ्वी के गुरुत्वाकर्षण खिंचाव से बचने के लिए अत्यधिक ऊर्जा और विशेष रॉकेट प्रणालियों की आवश्यकता होती है।
+
+संबंधित शब्द:
+द्रव्यमान, आकर्षण, कक्षा""",
+        "advanced": """परिभाषा:
+गुरुत्वाकर्षण एक मौलिक अंतःक्रिया है जो द्रव्यमान या ऊर्जा वाली सभी चीजों के बीच आकर्षण का कारण बनती है, जिसे सामान्य सापेक्षता में स्पेसटाइम वक्रता के रूप में वर्णित किया गया है।
+
+लाभ:
+यह ग्रहों की कक्षाओं के लिए आवश्यक अभिकेंद्री बल प्रदान करता है और ब्रह्मांडीय धूल से सितारों और आकाशगंगाओं के निर्माण को प्रेरित करता है।
+
+हानि:
+ब्रह्मांडीय पैमानों पर, यह विशाल सितारों में गुरुत्वाकर्षण पतन का कारण बनता है, जिससे ब्लैक होल जैसी स्थितियां पैदा हो सकती हैं।
+
+संबंधित शब्द:
+सापेक्षता, स्पेसटाइम, सिंगुलैरिटी"""
+    },
+    "atom": {
+        "beginner": """परिभाषा:
+परमाणु ब्रह्मांड की हर चीज का सबसे छोटा हिस्सा है।
+
+लाभ:
+दुनिया की हर चीज इन्हीं छोटे-छोटे टुकड़ों से बनी है।
+
+हानि:
+ये इतने छोटे होते हैं कि इन्हें किसी भी शीशे या माइक्रोस्कोप से नहीं देखा जा सकता।
+
+संबंधित शब्द:
+छोटा, हिस्सा, विज्ञान""",
+        "intermediate": """परिभाषा:
+परमाणु किसी रासायनिक तत्व की मूल इकाई है, जिसमें एक नाभिक (Nucleus) और उसके चारों ओर घूमने वाले इलेक्ट्रॉन होते हैं।
+
+लाभ:
+परमाणु मिलकर अणु (Molecules) बनाते हैं, जिससे हमारे आसपास के सभी पदार्थ बनते हैं।
+
+हानि:
+परमाणु संरचना में बदलाव से हानिकारक विकिरण (Radiation) पैदा हो सकता है।
+
+संबंधित शब्द:
+प्रोटॉन, इलेक्ट्रॉन, नाभिक""",
+        "advanced": """परिभाषा:
+परमाणु पदार्थ का सबसे छोटा घटक है जिसमें एक रासायनिक तत्व के गुण होते हैं, और यह नाभिक में प्रोटॉन की संख्या द्वारा परिभाषित होता है।
+
+लाभ:
+परमाणु संरचना सहसंयोजक और आयनिक बंधों के निर्माण की अनुमति देती है, जो रासायनिक प्रतिक्रियाओं के पीछे मुख्य बल हैं।
+
+हानि:
+परमाणु का व्यवहार क्वांटम यांत्रिकी (Quantum Mechanics) का पालन करता है, जिससे उनके व्यवहार की भविष्यवाणी करना अत्यंत कठिन हो जाता है।
+
+संबंधित शब्द:
+समस्थानिक (Isotope), क्वांटम भौतिकी, संयोजकता"""
+    },
+    "condensation": {
+        "beginner": """परिभाषा:
+संघनन तब होता है जब भाप ठंडी होकर वापस पानी की बूंदों में बदल जाती है।
+
+लाभ:
+यह बारिश और बादल बनाता है जिससे धरती को पानी मिलता है।
+
+हानि:
+यह घर के अंदर खिड़कियों और दीवारों को गीला और खराब कर सकता है।
+
+संबंधित शब्द:
+गीला, भाप, बारिश""",
+        "intermediate": """परिभाषा:
+संघनन पदार्थ की भौतिक अवस्था का गैस से तरल अवस्था में परिवर्तन है।
+
+लाभ:
+यह जल चक्र का एक अनिवार्य हिस्सा है और आसवन (Distillation) जैसी औद्योगिक प्रक्रियाओं में उपयोग किया जाता है।
+
+हानि:
+उच्च आर्द्रता वाले घरों में यह दीवारों पर फफूंद (Mold) का कारण बन सकता है।
+
+संबंधित शब्द:
+वाष्प, ओसांक (Dew Point), नमी""",
+        "advanced": """परिभाषा:
+संघनन एक चरण संक्रमण (Phase transition) है जिसमें कोई पदार्थ गैसीय अवस्था से तरल अवस्था में गुजरता है, जिससे गुप्त ऊष्मा (Latent heat) मुक्त होती है।
+
+लाभ:
+वायुमंडलीय संघनन वैश्विक ऊष्मा परिवहन और तूफान प्रणालियों के विकास के लिए महत्वपूर्ण है।
+
+हानि:
+औद्योगिक हीट एक्सचेंजर्स में, गैर-घनीभूत गैसें दक्षता को 40% तक कम कर सकती हैं।
+
+संबंधित शब्द:
+गुप्त ऊष्मा, न्यूक्लिएशन, सतही तनाव"""
+    },
+    "evaporation": {
+        "beginner": """परिभाषा:
+वाष्पीकरण तब होता है जब पानी गर्म होकर भाप बन जाता है और आसमान की ओर चला जाता है।
+
+लाभ:
+यह सूरज की रोशनी में आपके गीले कपड़ों को सुखाने में मदद करता है।
+
+हानि:
+बहुत ज्यादा गर्मी में यह तालाबों और गड्ढों का पानी सुखा सकता है।
+
+संबंधित शब्द:
+सूरज, भाप, सूखा""",
+        "intermediate": """परिभाषा:
+वाष्पीकरण वह प्रक्रिया है जिसके द्वारा तरल पानी जल वाष्प में परिवर्तित होकर वातावरण में प्रवेश करता है।
+
+लाभ:
+यह गंदगी को पीछे छोड़कर पानी को शुद्ध करने का एक प्राकृतिक तरीका है।
+
+हानि:
+सूखे क्षेत्रों में उच्च वाष्पीकरण से मिट्टी में नमक की मात्रा बढ़ सकती है, जिससे खेती कठिन हो जाती।
+
+संबंधित शब्द:
+वाष्प दाब, गर्मी, वाष्पीकरण""",
+        "advanced": """परिभाषा:
+वाष्पीकरण एक प्रकार का वाष्पीकरण है जो तरल की सतह पर होता है जब वह अपने क्वथनांक (Boiling point) तक पहुँचने से पहले गैस में बदल जाता है।
+
+लाभ:
+वाष्पीकरणीय शीतलन (Evaporative cooling) पसीने के माध्यम से शरीर के तापमान को नियंत्रित करने के लिए महत्वपूर्ण है।
+
+हानि:
+वाष्पीकरण की दर आसपास की गैस में वाष्प के आंशिक दबाव (Partial pressure) और उपलब्ध सतह क्षेत्र द्वारा सीमित होती है।
+
+संबंधित शब्द:
+ऊष्मप्रवैगिकी, आंशिक दबाव, एन्ट्रॉपी"""
+    }
 }
 
 if not HF_API_TOKEN:
@@ -324,8 +739,18 @@ def generate_explanation(term: str, level: str = "beginner", language: str = "en
 
     # Check Static Fallback first (Instant)
     term_key = term.lower().strip()
-    if language == "en" and term_key in STATIC_EXPLANATIONS:
-        return STATIC_EXPLANATIONS[term_key]
+    if language == "hi":
+        if term_key in STATIC_EXPLANATIONS_HI:
+            entry = STATIC_EXPLANATIONS_HI[term_key]
+            if isinstance(entry, dict):
+                return entry.get(level, entry.get("beginner"))
+            return entry
+    elif language == "en":
+        if term_key in STATIC_EXPLANATIONS:
+            entry = STATIC_EXPLANATIONS[term_key]
+            if isinstance(entry, dict):
+                return entry.get(level, entry.get("beginner"))
+            return entry
 
     models_to_try = [PRIMARY_MODEL] + FALLBACK_MODELS
     
@@ -593,7 +1018,34 @@ STATIC_TREES = {
 │   │   │   └── Gene Expression
 │   │   └── Genomics
 │   └── Heredity
-└── Evolutionary Biology"""
+└── Evolutionary Biology""",
+    "condensation": """Physics/Meteorology
+├── Phase Changes
+│   ├── Phase Transitions
+│   │   ├── *Condensation*
+│   │   │   ├── Cloud Formation
+│   │   │   └── Precipitation
+│   │   └── Evaporation
+│   └── State of Matter
+└── Thermal Physics""",
+    "evaporation": """Physics/Chemistry
+├── Phase Changes
+│   ├── Phase Transitions
+│   │   ├── *Evaporation*
+│   │   │   ├── Boiling Point
+│   │   │   └── Vapor Pressure
+│   │   └── Condensation
+│   └── Hydrology
+└── Thermodynamics""",
+    "respiration": """Biology
+├── Cell Biology
+│   ├── Metabolism
+│   │   ├── *Respiration*
+│   │   │   ├── Aerobic Respiration
+│   │   │   └── Anaerobic Respiration
+│   │   └── ATP Production
+│   └── Physiology
+└── Biochemistry"""
 }
 
 # Static fallback trees for common terms in Hindi
